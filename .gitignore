@@ -37,3 +37,5 @@ replay_pid*
 /.idea/checkstyle-idea.xml
 /.gitattributes
 /.idea/.gitignore
+/src/main/resources/application-local.properties
+/target/classes/application-local.properties
