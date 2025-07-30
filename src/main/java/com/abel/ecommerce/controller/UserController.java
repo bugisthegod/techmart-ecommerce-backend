@@ -6,6 +6,7 @@ import com.abel.ecommerce.entity.User;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
 import com.abel.ecommerce.service.UserService;
+import com.abel.ecommerce.utils.ResponseResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -24,32 +25,33 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserRegisterRequest request) {
+    public ResponseResult<String> register(@Valid @RequestBody UserRegisterRequest request) {
         try {
             User user = userService.register(request);
-            return ResponseEntity.ok("User registered successfully with ID: " + user.getId());
+            return ResponseResult.ok("User registered successfully with ID: " + user.getId());
         }
         catch (UserAlreadyExistsException e) {
-            return ResponseEntity.status(e.getCode()).body(e.getMessage());
+            return ResponseResult.error(e.getCode(), e.getMessage());
         }
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<UserResponse> findUserByUsername(String username) {
+    public ResponseResult<UserResponse> findUserByUsername(String username) {
         try {
             User user = userService.findByUsername(username);
             UserResponse userResponse = new UserResponse();
             BeanUtils.copyProperties(user, userResponse);
-            return ResponseEntity.ok(userResponse);
+            return ResponseResult.ok(userResponse);
         }
         catch (UserNotFoundException e) {
-            return ResponseEntity.status(404).body(null);
+            return ResponseResult.error(e.getCode(), e.getMessage());
         }
+
     }
 
     @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok("User Api is working");
+    public ResponseResult<String> test() {
+        return ResponseResult.ok("User Api is working");
     }
 
 }
