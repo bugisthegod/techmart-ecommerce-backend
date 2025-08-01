@@ -1,12 +1,15 @@
 package com.abel.ecommerce.controller;
 
+import com.abel.ecommerce.dto.request.UserLoginRequest;
 import com.abel.ecommerce.dto.request.UserRegisterRequest;
+import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.User;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
 import com.abel.ecommerce.service.UserService;
 import com.abel.ecommerce.utils.ResponseResult;
+import com.abel.ecommerce.utils.ResultCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -46,7 +49,20 @@ public class UserController {
         catch (UserNotFoundException e) {
             return ResponseResult.error(e.getCode(), e.getMessage());
         }
+    }
 
+    @PostMapping("/login")
+    public ResponseResult<LoginResponse> login(@Valid @RequestBody UserLoginRequest request) {
+        try {
+            LoginResponse loginResponse = userService.login(request);
+            return ResponseResult.ok(loginResponse);
+        }
+        catch (UserNotFoundException e) {
+            return ResponseResult.error(e.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
+        }
     }
 
     @GetMapping("/test")
