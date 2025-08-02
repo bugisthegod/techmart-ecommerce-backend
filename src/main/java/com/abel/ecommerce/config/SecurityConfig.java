@@ -20,9 +20,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF protection
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/users/register").permitAll()  // Allow registration without authentication
-                        .requestMatchers("/api/users/login").permitAll()     // Allow login without authentication
-                        .requestMatchers("/api/users/test").permitAll()      // Allow test endpoint without authentication
+                        .requestMatchers("/api/users/**").permitAll()  // Allow users without authentication
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
                         .anyRequest().authenticated()  // All other requests require authentication
                 );
         return http.build();
