@@ -5,19 +5,16 @@ import com.abel.ecommerce.dto.request.UserRegisterRequest;
 import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.User;
-import com.abel.ecommerce.exception.BaseException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
 import com.abel.ecommerce.repository.UserRepository;
 import com.abel.ecommerce.utils.JwtTokenUtil;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

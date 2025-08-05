@@ -1,6 +1,7 @@
 package com.abel.ecommerce.repository;
 
 import com.abel.ecommerce.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.awt.print.Pageable;
@@ -8,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface ProductRepository {
+public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // Find products by categoryId
     List<Product> findByCategoryId(Long categoryId);
