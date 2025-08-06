@@ -4,7 +4,8 @@ import com.abel.ecommerce.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -15,10 +16,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
     // Find products by status
-    List<Product> findByStatus(Integer status);
+    Page<Product> findByStatus(Integer status);
 
     // Find products by categoryId and status
-    List<Product> findByCategoryIdAndStatus(Long categoryId, Integer status);
+    Page<Product> findByCategoryIdAndStatus(Long categoryId, Integer status, Pageable pageable);
 
     // Find products between price
     List<Product> findByPriceBetween(BigDecimal priceStart, BigDecimal priceEnd);
@@ -33,10 +34,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByStatusOrderBySalesDesc(Integer status);
 
     // Find products by status pageable
-    List<Product> findByStatus(Integer status, Pageable pageable);
+    Page<Product> findByStatus(Integer status, Pageable pageable);
 
     // Find products by categoryId pageable
-    List<Product> findByCategoryId(Long categoryId, Pageable pageable);
+    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
 
     // Count the product number by categoryId
     long countByCategoryId(Long categoryId);
