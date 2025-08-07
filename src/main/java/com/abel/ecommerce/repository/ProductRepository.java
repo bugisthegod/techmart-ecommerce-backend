@@ -16,7 +16,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
     // Find products by status
-    Page<Product> findByStatus(Integer status);
+    List<Product> findByStatus(Integer status);
 
     // Find products by categoryId and status
     Page<Product> findByCategoryIdAndStatus(Long categoryId, Integer status, Pageable pageable);
