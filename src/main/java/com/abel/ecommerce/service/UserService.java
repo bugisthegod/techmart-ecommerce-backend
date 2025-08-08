@@ -49,7 +49,7 @@ public class UserService {
 
     public LoginResponse login(UserLoginRequest request) throws Exception {
         User user = findByUsername(request.getUsername());
-        if (user.getPassword().equals(passwordEncoder.encode(request.getPassword()))) {
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Incorrect password");
         }
         String token = JwtTokenUtil.generateToken(user.getUsername());
