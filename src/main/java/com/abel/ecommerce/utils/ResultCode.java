@@ -28,9 +28,9 @@ public enum ResultCode {
     /* Business Errors: 4000～4999 */
     NO_PERMISSION(4001, "No permission"),
 
-    /* Department Errors: 5000～5999 */
-    DEPARTMENT_NOT_EXIST(5007, "Department does not exist"),
-    DEPARTMENT_ALREADY_EXIST(5008, "Department already exists"),
+    /* Category Errors: 5000～5999 */
+    CATEGORY_NOT_EXIST(5007, "Category does not exist"),
+    CATEGORY_ALREADY_EXIST(5008, "Category already exists"),
 
     /* Product Errors: 6000～6999 */
     PRODUCT_NOT_EXIST(6001, "Product does not exist"),
