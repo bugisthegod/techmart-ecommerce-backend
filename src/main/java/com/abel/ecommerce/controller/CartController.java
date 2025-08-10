@@ -29,29 +29,29 @@ public class CartController {
 
     @Operation(summary = "Add product to cart")
     @PostMapping("/add")
-    public ResponseEntity<ResponseResult<CartItemResponse>> addToCart(
+    public ResponseResult<CartItemResponse> addToCart(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item data") @Valid @RequestBody CartItemRequest request) {
         try {
             CartItem cartItem = cartService.addToCart(userId, request);
             CartItemResponse response = new CartItemResponse();
             BeanUtils.copyProperties(cartItem, response);
-            return ResponseEntity.ok(ResponseResult.ok(response));
-        } catch (ProductNotFoundException e) {
-            return ResponseEntity.badRequest().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Product not found"));
-        } catch (InsufficientStockException e) {
-            return ResponseEntity.badRequest().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL));
+            return ResponseResult.ok(response);
+        }
+        catch (ProductNotFoundException e) {
+            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST);
+        }
+        catch (InsufficientStockException e) {
+            return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK);
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
 
     @Operation(summary = "Update cart item quantity")
     @PutMapping("/update/{cartItemId}")
-    public ResponseEntity<ResponseResult<CartItemResponse>> updateCartItem(
+    public ResponseResult<CartItemResponse> updateCartItem(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
             @Parameter(description = "Updated cart item data") @Valid @RequestBody CartItemRequest request) {
@@ -59,74 +59,77 @@ public class CartController {
             CartItem cartItem = cartService.updateCartItem(userId, cartItemId, request);
             CartItemResponse response = new CartItemResponse();
             BeanUtils.copyProperties(cartItem, response);
-            return ResponseEntity.ok(ResponseResult.ok(response));
-        } catch (CartItemNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (InsufficientStockException e) {
-            return ResponseEntity.badRequest().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL));
+            return ResponseResult.ok(response);
+        }
+        catch (CartItemNotFoundException e) {
+            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST);
+        }
+        catch (InsufficientStockException e) {
+            return ResponseResult.error(ResultCode.PRODUCT_ALREADY_EXIST);
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
 
     @Operation(summary = "Remove item from cart")
     @DeleteMapping("/remove/{cartItemId}")
-    public ResponseEntity<ResponseResult<String>> removeFromCart(
+    public ResponseResult<String> removeFromCart(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId) {
         try {
             cartService.removeFromCart(userId, cartItemId);
-            return ResponseEntity.ok(ResponseResult.ok("Item removed from cart successfully"));
-        } catch (CartItemNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL));
+            return ResponseResult.ok("Item removed from cart successfully");
+        }
+        catch (CartItemNotFoundException e) {
+            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST);
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
 
     @Operation(summary = "Get user cart")
     @GetMapping
-    public ResponseEntity<ResponseResult<CartResponse>> getCart(
+    public ResponseResult<CartResponse> getCart(
             @Parameter(description = "User ID") @RequestParam Long userId) {
         try {
             CartResponse cartResponse = cartService.getCartByUserId(userId);
-            return ResponseEntity.ok(ResponseResult.ok(cartResponse));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL));
+            return ResponseResult.ok(cartResponse);
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
 
     @Operation(summary = "Clear user cart")
     @DeleteMapping("/clear")
-    public ResponseEntity<ResponseResult<String>> clearCart(
+    public ResponseResult<String> clearCart(
             @Parameter(description = "User ID") @RequestParam Long userId) {
         try {
             cartService.clearCart(userId);
-            return ResponseEntity.ok(ResponseResult.ok("Cart cleared successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL));
+            return ResponseResult.ok("Cart cleared successfully");
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
 
     @Operation(summary = "Update item selection status")
     @PutMapping("/select/{cartItemId}")
-    public ResponseEntity<ResponseResult<String>> updateItemSelection(
+    public ResponseResult<String> updateItemSelection(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
             @Parameter(description = "Selection status (0 or 1)") @RequestParam Integer selected) {
         try {
             cartService.updateItemSelection(userId, cartItemId, selected);
-            return ResponseEntity.ok(ResponseResult.ok("Selection status updated successfully"));
-        } catch (CartItemNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                ResponseResult.error(ResultCode.COMMON_FAIL));
+            return ResponseResult.ok("Selection status updated successfully");
+        }
+        catch (CartItemNotFoundException e) {
+            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST);
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
 }

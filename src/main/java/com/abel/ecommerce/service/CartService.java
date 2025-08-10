@@ -59,15 +59,33 @@ public class CartService {
 
     @Transactional
     public CartItem updateCartItem(Long userId, Long cartItemId, CartItemRequest request) {
-        // TODO: 你来实现这个方法 - 更新购物车商品数量
-        // 需要检查：购物车项是否存在、是否属于该用户、库存是否充足
-        return null;
+        // Check if cart existed
+        CartItem cartItemById = findCartItemById(cartItemId);
+
+        // Check if cart item belongs to this user
+        if (!cartItemById.getUserId().equals(userId)) throw new CartItemNotFoundException("Cart Item does not belong to user");
+
+        Product productById = productService.findProductById(request.getProductId());
+
+        // Check if new quantity exceeds stock
+        if (request.getQuantity() > productById.getStock())
+            throw new InsufficientStockException(productById.getName(), productById.getStock(), request.getQuantity());
+
+        // Update cart Item
+        cartItemById.setQuantity(request.getQuantity());
+        return cartItemRepository.save(cartItemById);
     }
 
     @Transactional
     public void removeFromCart(Long userId, Long cartItemId) {
-        // TODO: 你来实现这个方法 - 从购物车删除商品
-        // 需要检查：购物车项是否存在、是否属于该用户
+        // Check if cart Item existed
+        CartItem cartItemById = findCartItemById(cartItemId);
+
+        // Check if cart Item belongs to user
+        if (!cartItemById.getUserId().equals(userId)) throw new CartItemNotFoundException("Cart Item does not belong to user");
+
+        // Delete cart Item
+        cartItemRepository.deleteById(cartItemId);
     }
 
     @Transactional
@@ -77,8 +95,15 @@ public class CartService {
 
     @Transactional
     public void updateItemSelection(Long userId, Long cartItemId, Integer selected) {
-        // TODO: 你来实现这个方法 - 更新商品选择状态
-        // 需要检查：购物车项是否存在、是否属于该用户
+        // Check if cart Item existed
+        CartItem cartItemById = findCartItemById(cartItemId);
+
+        // Check if cart Item belongs to user
+        if (!cartItemById.getUserId().equals(userId)) throw new CartItemNotFoundException("Cart Item does not belong to user");
+
+        // Update cart Item selected
+        cartItemById.setSelected(selected);
+        cartItemRepository.save(cartItemById);
     }
 
     public CartResponse getCartByUserId(Long userId) {
