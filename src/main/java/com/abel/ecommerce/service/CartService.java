@@ -28,9 +28,6 @@ public class CartService {
 
     @Transactional
     public CartItem addToCart(Long userId, CartItemRequest request) {
-        // TODO: 你来实现这个方法 - 添加商品到购物车
-        // 需要检查：产品是否存在、库存是否充足、是否已在购物车中
-
         // Check if product exists && Check  if stock is enough
         Product productById = productService.findProductById(request.getProductId());
         if (request.getQuantity() > productById.getStock()) throw new InsufficientStockException(productById.getName(), productById.getStock(),
