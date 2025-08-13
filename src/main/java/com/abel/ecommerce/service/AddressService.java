@@ -45,8 +45,14 @@ public class AddressService {
         // Copy basic properties
         BeanUtils.copyProperties(request, existingAddress, "id", "userId", "createdAt");
 
+        // if user want to change the last address as non default
+        if (getAddressCount(userId) == 1 && Address.NON_DEFAULT_ADDRESS.equals(request.getIsDefault()))
+            throw new DefaultAddressException("You must " +
+                    "have at least one default address");
+
         // Change other addresses as non default
         if (Address.DEFAULT_ADDRESS.equals(request.getIsDefault())) addressRepository.clearDefaultByUserId(userId);
+
 
         return addressRepository.save(existingAddress);
     }
@@ -55,14 +61,24 @@ public class AddressService {
     @Transactional
     public void deleteAddress(Long userId, Long addressId) {
         Address address = findAddressByIdAndUserId(addressId, userId);
+        boolean wasDefault = address.isDefaultAddress();
 
         // If this address is the last address
-        if (!hasAddresses(userId)) throw DefaultAddressException.cannotDeleteLastAddress();
+        if (getAddressCount(userId) <= 1) throw DefaultAddressException.cannotDeleteLastAddress();
 
-        // If this address is default address
-        if (address.isDefaultAddress()) throw DefaultAddressException.cannotDeleteDefaultAddress();
-
+        // Delete this address at first, because remainingAddresses will contain the delete one
         addressRepository.deleteById(addressId);
+
+        // If this address is default address, set other address as default
+        if (wasDefault) {
+            List<Address> remainingAddresses  = findAddressesByUserId(userId);
+            if (!remainingAddresses .isEmpty()){
+                Address newDefault = remainingAddresses .get(0);
+                newDefault.setIsDefault(Address.DEFAULT_ADDRESS);
+                addressRepository.save(newDefault);
+            }
+        }
+
     }
 
     @Transactional
