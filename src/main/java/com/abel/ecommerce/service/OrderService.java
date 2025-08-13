@@ -16,8 +16,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,7 +50,7 @@ public class OrderService {
     public Order createOrder(Long userId, OrderRequest request) {
         // TODO: 你来实现订单创建的核心业务逻辑
         // 提示：这是最复杂的方法，涉及多表操作和事务管理
-        
+
         // 1. 验证购物车
         // 2. 验证地址
         // 3. 检查库存
@@ -57,7 +60,7 @@ public class OrderService {
         // 7. 创建订单项
         // 8. 扣减库存
         // 9. 清空购物车
-        
+
         throw new UnsupportedOperationException("TODO: Implement order creation logic");
     }
 
@@ -97,21 +100,40 @@ public class OrderService {
     @Transactional
     public void shipOrder(Long orderId) {
         // TODO: 你来实现发货逻辑
-        throw new UnsupportedOperationException("TODO: Implement shipping logic");
+        // Check if order exists
+        Order nonShipOrder = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        // Check if status is paid
+        if (!Order.STATUS_PAID.equals(nonShipOrder.getStatus())) {
+            throw new OrderStatusException("Only paid order can be shipped");
+        }
+
+        // Update order status and delivery time
+        nonShipOrder.setStatus(Order.STATUS_SHIPPED);
+        nonShipOrder.setDeliveryTime(LocalDateTime.now());
+        orderRepository.save(nonShipOrder);
     }
 
     /**
      * Complete order
-     * TODO: 你来实现订单完成逻辑
      */
     @Transactional
     public void completeOrder(Long userId, Long orderId) {
-        // TODO: 你来实现订单完成逻辑
-        throw new UnsupportedOperationException("TODO: Implement order completion logic");
+        // Find order and verify order exists
+        Order shippedOrder = orderRepository.findByIdAndUserId(orderId,userId).orElseThrow(()-> new OrderNotFoundException(orderId));
+
+        // verify order status
+        if (!Order.STATUS_SHIPPED.equals(shippedOrder.getStatus())) {
+            throw OrderStatusException.cannotComplete(shippedOrder.getOrderNo());
+        }
+
+        // Update order status and receive time
+        shippedOrder.setReceiveTime(LocalDateTime.now());
+        shippedOrder.setStatus(Order.STATUS_COMPLETED);
+        orderRepository.save(shippedOrder);
     }
 
-    // 以下是简单的查询方法，已经实现
-    
+
     public Page<OrderResponse> findOrdersByUserId(Long userId, Pageable pageable) {
         Page<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
         return orders.map(this::convertToOrderResponse);
@@ -151,27 +173,28 @@ public class OrderService {
 
     /**
      * Generate unique order number
-     * TODO: 你可以优化这个方法，实现更好的订单号生成策略
      */
-    public String generateOrderNo() {
-        // Simple implementation - you can improve this
-        String timestamp = String.valueOf(System.currentTimeMillis());
-        String random = String.valueOf((int)(Math.random() * 1000));
-        return "ORD" + timestamp + random;
+    public String generateOrderNo(Long userId) {
+        // timestamp(yyyyMMddHHmmss) + userSuffix + random
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String userSuffix = String.format("%04d", userId % 10000);
+        String random = String.format("%03d", new Random().nextInt(1000));
+        return timestamp + userSuffix + random;
     }
 
+
     // Helper methods for conversion
-    
+
     private OrderResponse convertToOrderResponse(Order order) {
         OrderResponse response = new OrderResponse();
         BeanUtils.copyProperties(order, response);
-        
+
         // Set computed fields
         response.setStatusText(order.getStatusText());
         response.setCanBeCancelled(order.canBeCancelled());
         response.setCanBeShipped(order.canBeShipped());
         response.setCanBeCompleted(order.canBeCompleted());
-        
+
         // Load order items
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
         List<OrderItemResponse> itemResponses = items.stream()
@@ -179,7 +202,7 @@ public class OrderService {
                 .collect(Collectors.toList());
         response.setItems(itemResponses);
         response.setTotalItems(itemResponses.size());
-        
+
         return response;
     }
 

@@ -128,13 +128,13 @@ public class Order {
     }
 
     public String getStatusText() {
-        switch (this.status) {
-            case 0: return "Pending Payment";
-            case 1: return "Paid";
-            case 2: return "Shipped";
-            case 3: return "Completed";
-            case 4: return "Cancelled";
-            default: return "Unknown";
-        }
+        return switch (this.status) {
+            case 0 -> "Pending Payment";
+            case 1 -> "Paid";
+            case 2 -> "Shipped";
+            case 3 -> "Completed";
+            case 4 -> "Cancelled";
+            default -> "Unknown";
+        };
     }
 }
