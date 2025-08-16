@@ -52,11 +52,11 @@ public class Order {
 
     @DecimalMin(value = "0.0", message = "Freight amount cannot be negative")
     @Column(name = "freight_amount", precision = 10, scale = 2, columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
-    private BigDecimal freightAmount = BigDecimal.ZERO;
+    private BigDecimal freightAmount;
 
     @NotNull(message = "Order status cannot be null")
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-    private Integer status = STATUS_PENDING_PAYMENT;
+    private Integer status;
 
     @Column(name = "payment_time")
     private LocalDateTime paymentTime;

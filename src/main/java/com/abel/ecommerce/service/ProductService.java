@@ -32,6 +32,10 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product updateProduct(Product product) {
+        return productRepository.save(product);
+    }
+
     @Transactional
     public Product updateProduct(ProductRequest request, Long id) {
         Product existingProduct = findProductById(id);

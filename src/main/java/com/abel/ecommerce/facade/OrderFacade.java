@@ -6,9 +6,12 @@ import com.abel.ecommerce.exception.*;
 import com.abel.ecommerce.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +28,81 @@ public class OrderFacade {
      */
     @Transactional
     public Order createOrder(Long userId, OrderRequest request) {
+        // Now only focus on create order
+        // 1.1 获取用户购物车中已选中的商品
+        // 1.2 验证购物车不为空
+        // 1.3 验证是否有选中的商品
 
+        // Check is there any selected cart items
+        List<CartItem> selectedCartItems = cartService.getSelectedCartItems(userId);
+        if (selectedCartItems.isEmpty()) throw new OrderException("Please select items to order");
+
+        // Check address belongs to user
+        Address address = addressService.findAddressByIdAndUserId(request.getAddressId(), userId);
+
+        // Check if product stock is enough and calculate total price
+        BigDecimal freightAmount = new BigDecimal("10.00");
+        BigDecimal totalAmount = selectedCartItems.stream().map(cartItem -> {
+            Product product = productService.findProductById(cartItem.getProductId());
+            if (cartItem.getQuantity() > product.getStock()) throw new InsufficientStockException(product.getName(), product.getStock(),
+                    cartItem.getQuantity());
+            BigDecimal itemAmount = product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
+            return product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
+        }).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 5.1 调用generateOrderNo(userId)生成唯一订单号
+        String newOrderNo = orderService.generateOrderNo(userId);
+
+        // 6.1 创建Order对象
+// 6.2 设置订单基本信息（用户ID、订单号、金额等）
+// 6.3 设置收货地址信息（从Address复制到Order）
+// 6.4 设置订单状态为STATUS_PENDING_PAYMENT
+// 6.5 保存Order到数据库
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setOrderNo(newOrderNo);
+        order.setTotalAmount(totalAmount);
+        order.setFreightAmount(freightAmount);
+        order.setReceiverName(address.getReceiverName());
+        order.setReceiverAddress(address.getFullAddress());
+        order.setReceiverPhone(address.getReceiverPhone());
+        order.setStatus(Order.STATUS_PENDING_PAYMENT);
+        orderService.updateOrder(order);
+
+        // 7.1 遍历购物车商品
+// 7.2 为每个商品创建OrderItem
+// 7.3 设置商品信息（ID、名称、价格、数量等）
+// 7.4 批量保存OrderItem到数据库
+        List<OrderItem> orderItems = selectedCartItems.stream().map(cartItem -> {
+            Product product = productService.findProductById(cartItem.getProductId());
+            BigDecimal itemAmount = product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderId(order.getId());
+            orderItem.setOrderNo(newOrderNo);
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setProductName(product.getName());
+            orderItem.setProductImage(product.getImages());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setProductPrice(product.getPrice());
+            orderItem.setTotalAmount(itemAmount);
+            return orderItem;
+        }).toList();
+
+        // Save all order items to database
+        orderService.saveOrderItems(orderItems);
+
+        // 8.1 遍历订单商品
+// 8.2 for each product: 当前库存 - 购买数量
+// 8.3 更新Product表的stock字段
+// 8.4 增加Product表的sales字段
+
+        // 9.1 删除用户购物车中已下单的商品
+// 9.2 或者标记为已下单状态
+
+        // 10.1 返回创建成功的Order对象
+
+
+        return null;
     }
 
     /**
@@ -58,6 +135,4 @@ public class OrderFacade {
         order.setStatus(Order.STATUS_CANCELLED);
         orderService.updateOrder(order);
     }
-
-
 }
