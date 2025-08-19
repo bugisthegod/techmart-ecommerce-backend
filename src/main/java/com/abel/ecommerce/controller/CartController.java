@@ -8,6 +8,8 @@ import com.abel.ecommerce.exception.CartItemNotFoundException;
 import com.abel.ecommerce.exception.InsufficientStockException;
 import com.abel.ecommerce.exception.ProductNotFoundException;
 import com.abel.ecommerce.service.CartService;
+import com.abel.ecommerce.service.ProductService;
+import com.abel.ecommerce.entity.Product;
 import com.abel.ecommerce.utils.ResponseResult;
 import com.abel.ecommerce.utils.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +21,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
@@ -26,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     private final CartService cartService;
+    private final ProductService productService;
 
     @Operation(summary = "Add product to cart")
     @PostMapping("/add")
@@ -34,8 +41,7 @@ public class CartController {
             @Parameter(description = "Cart item data") @Valid @RequestBody CartItemRequest request) {
         try {
             CartItem cartItem = cartService.addToCart(userId, request);
-            CartItemResponse response = new CartItemResponse();
-            BeanUtils.copyProperties(cartItem, response);
+            CartItemResponse response = convertToCartItemResponse(cartItem);
             return ResponseResult.ok(response);
         }
         catch (ProductNotFoundException e) {
@@ -57,8 +63,7 @@ public class CartController {
             @Parameter(description = "Updated cart item data") @Valid @RequestBody CartItemRequest request) {
         try {
             CartItem cartItem = cartService.updateCartItem(userId, cartItemId, request);
-            CartItemResponse response = new CartItemResponse();
-            BeanUtils.copyProperties(cartItem, response);
+            CartItemResponse response = convertToCartItemResponse(cartItem);
             return ResponseResult.ok(response);
         }
         catch (CartItemNotFoundException e) {
@@ -94,7 +99,8 @@ public class CartController {
     public ResponseResult<CartResponse> getCart(
             @Parameter(description = "User ID") @RequestParam Long userId) {
         try {
-            CartResponse cartResponse = cartService.getCartByUserId(userId);
+            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+            CartResponse cartResponse = convertToCartResponse(userId, cartItems);
             return ResponseResult.ok(cartResponse);
         }
         catch (Exception e) {
@@ -131,5 +137,64 @@ public class CartController {
         catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
+    }
+
+    /**
+     * Convert CartItems to CartResponse
+     */
+    private CartResponse convertToCartResponse(Long userId, List<CartItem> cartItems) {
+        List<CartItemResponse> itemResponses = cartItems.stream()
+                .map(this::convertToCartItemResponse)
+                .collect(Collectors.toList());
+
+        CartResponse cartResponse = new CartResponse();
+        cartResponse.setUserId(userId);
+        cartResponse.setItems(itemResponses);
+        cartResponse.setTotalItems(itemResponses.size());
+
+        // Calculate totals
+        BigDecimal totalAmount = itemResponses.stream()
+                .map(CartItemResponse::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal selectedAmount = itemResponses.stream()
+                .filter(item -> item.getSelected() == 1)
+                .map(CartItemResponse::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int selectedCount = (int) itemResponses.stream()
+                .filter(item -> item.getSelected() == 1)
+                .count();
+
+        cartResponse.setTotalAmount(totalAmount);
+        cartResponse.setSelectedAmount(selectedAmount);
+        cartResponse.setSelectedCount(selectedCount);
+
+        return cartResponse;
+    }
+
+    /**
+     * Convert CartItem entity to CartItemResponse DTO
+     */
+    private CartItemResponse convertToCartItemResponse(CartItem cartItem) {
+        CartItemResponse response = new CartItemResponse();
+        BeanUtils.copyProperties(cartItem, response);
+
+        // Get product details
+        try {
+            Product product = productService.findProductById(cartItem.getProductId());
+            response.setProductName(product.getName());
+            response.setProductImage(product.getMainImage());
+            response.setProductPrice(product.getPrice());
+            response.setTotalAmount(product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+        }
+        catch (ProductNotFoundException e) {
+            // Handle case where product might have been deleted
+            response.setProductName("Product not found");
+            response.setProductPrice(BigDecimal.ZERO);
+            response.setTotalAmount(BigDecimal.ZERO);
+        }
+
+        return response;
     }
 }

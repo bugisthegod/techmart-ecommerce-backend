@@ -1,8 +1,6 @@
 package com.abel.ecommerce.service;
 
 import com.abel.ecommerce.dto.request.CartItemRequest;
-import com.abel.ecommerce.dto.response.CartItemResponse;
-import com.abel.ecommerce.dto.response.CartResponse;
 import com.abel.ecommerce.entity.CartItem;
 import com.abel.ecommerce.entity.Product;
 import com.abel.ecommerce.exception.CartItemNotFoundException;
@@ -11,13 +9,10 @@ import com.abel.ecommerce.exception.ProductNotFoundException;
 import com.abel.ecommerce.repository.CartItemRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -103,37 +98,8 @@ public class CartService {
         cartItemRepository.save(cartItemById);
     }
 
-    public CartResponse getCartByUserId(Long userId) {
-        List<CartItem> cartItems = cartItemRepository.findByUserIdOrderByCreatedAtDesc(userId);
-
-        List<CartItemResponse> itemResponses = cartItems.stream()
-                .map(this::convertToCartItemResponse)
-                .collect(Collectors.toList());
-
-        CartResponse cartResponse = new CartResponse();
-        cartResponse.setUserId(userId);
-        cartResponse.setItems(itemResponses);
-        cartResponse.setTotalItems(itemResponses.size());
-
-        // Calculate totals
-        BigDecimal totalAmount = itemResponses.stream()
-                .map(CartItemResponse::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal selectedAmount = itemResponses.stream()
-                .filter(item -> item.getSelected() == 1)
-                .map(CartItemResponse::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        int selectedCount = (int) itemResponses.stream()
-                .filter(item -> item.getSelected() == 1)
-                .count();
-
-        cartResponse.setTotalAmount(totalAmount);
-        cartResponse.setSelectedAmount(selectedAmount);
-        cartResponse.setSelectedCount(selectedCount);
-
-        return cartResponse;
+    public List<CartItem> getCartItemsByUserId(Long userId) {
+        return cartItemRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     public List<CartItem> getSelectedCartItems(Long userId) {
@@ -145,25 +111,4 @@ public class CartService {
                 .orElseThrow(() -> new CartItemNotFoundException(cartItemId, "cart Item ID"));
     }
 
-    private CartItemResponse convertToCartItemResponse(CartItem cartItem) {
-        CartItemResponse response = new CartItemResponse();
-        BeanUtils.copyProperties(cartItem, response);
-
-        // Get product details
-        try {
-            Product product = productService.findProductById(cartItem.getProductId());
-            response.setProductName(product.getName());
-            response.setProductImage(product.getMainImage());
-            response.setProductPrice(product.getPrice());
-            response.setTotalAmount(product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-        }
-        catch (ProductNotFoundException e) {
-            // Handle case where product might have been deleted
-            response.setProductName("Product not found");
-            response.setProductPrice(BigDecimal.ZERO);
-            response.setTotalAmount(BigDecimal.ZERO);
-        }
-
-        return response;
-    }
 }

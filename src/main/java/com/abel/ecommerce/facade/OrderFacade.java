@@ -30,10 +30,6 @@ public class OrderFacade {
     @Transactional
     public Order createOrder(Long userId, OrderRequest request) {
         // Now only focus on create order
-        // 1.1 获取用户购物车中已选中的商品
-        // 1.2 验证购物车不为空
-        // 1.3 验证是否有选中的商品
-
         // Check is there any selected cart items
         List<CartItem> selectedCartItems = cartService.getSelectedCartItems(userId);
         if (selectedCartItems.isEmpty()) throw new OrderException("Please select items to order");
@@ -55,16 +51,10 @@ public class OrderFacade {
 
         totalAmount = totalAmount.add(freightAmount);
 
-
-
-        // 5.1 调用generateOrderNo(userId)生成唯一订单号
+        // generate unique orderNo
         String newOrderNo = orderService.generateOrderNo(userId);
 
-        // 6.1 创建Order对象
-// 6.2 设置订单基本信息（用户ID、订单号、金额等）
-// 6.3 设置收货地址信息（从Address复制到Order）
-// 6.4 设置订单状态为STATUS_PENDING_PAYMENT
-// 6.5 保存Order到数据库
+        // Create order
         Order order = new Order();
         order.setUserId(userId);
         order.setOrderNo(newOrderNo);
@@ -93,16 +83,11 @@ public class OrderFacade {
         // Save all order items to database
         orderService.saveOrderItems(orderItems);
 
-        // 8.1 遍历订单商品
-// 8.2 for each product: 当前库存 - 购买数量
-// 8.3 更新Product表的stock字段
-// 8.4 增加Product表的sales字段
-
+        // Remove all selected cart items
         for (CartItem cartItem : selectedCartItems) {
             cartService.removeFromCart(userId, cartItem.getId());
         }
 
-        // 10.1 返回创建成功的Order对象
         return order;
     }
 
