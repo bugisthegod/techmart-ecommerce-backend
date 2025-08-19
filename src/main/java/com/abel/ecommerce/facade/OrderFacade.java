@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,14 +42,20 @@ public class OrderFacade {
         Address address = addressService.findAddressByIdAndUserId(request.getAddressId(), userId);
 
         // Check if product stock is enough and calculate total price
+        // Reserve all products for order
+        List<Product> products = productService.reserveProductsForOrder(selectedCartItems);
+
+        Map<Long, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, p -> p));
+
         BigDecimal freightAmount = new BigDecimal("10.00");
         BigDecimal totalAmount = selectedCartItems.stream().map(cartItem -> {
-            Product product = productService.findProductById(cartItem.getProductId());
-            if (cartItem.getQuantity() > product.getStock()) throw new InsufficientStockException(product.getName(), product.getStock(),
-                    cartItem.getQuantity());
-            BigDecimal itemAmount = product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
+            Product product = productMap.get(cartItem.getProductId());
             return product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
         }).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        totalAmount = totalAmount.add(freightAmount);
+
+
 
         // 5.1 调用generateOrderNo(userId)生成唯一订单号
         String newOrderNo = orderService.generateOrderNo(userId);
@@ -68,13 +75,8 @@ public class OrderFacade {
         order.setReceiverPhone(address.getReceiverPhone());
         order.setStatus(Order.STATUS_PENDING_PAYMENT);
         orderService.updateOrder(order);
-
-        // 7.1 遍历购物车商品
-// 7.2 为每个商品创建OrderItem
-// 7.3 设置商品信息（ID、名称、价格、数量等）
-// 7.4 批量保存OrderItem到数据库
         List<OrderItem> orderItems = selectedCartItems.stream().map(cartItem -> {
-            Product product = productService.findProductById(cartItem.getProductId());
+            Product product = productMap.get(cartItem.getProductId());
             BigDecimal itemAmount = product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
             OrderItem orderItem = new OrderItem();
             orderItem.setOrderId(order.getId());
@@ -96,13 +98,12 @@ public class OrderFacade {
 // 8.3 更新Product表的stock字段
 // 8.4 增加Product表的sales字段
 
-        // 9.1 删除用户购物车中已下单的商品
-// 9.2 或者标记为已下单状态
+        for (CartItem cartItem : selectedCartItems) {
+            cartService.removeFromCart(userId, cartItem.getId());
+        }
 
         // 10.1 返回创建成功的Order对象
-
-
-        return null;
+        return order;
     }
 
     /**
