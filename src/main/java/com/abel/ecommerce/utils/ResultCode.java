@@ -13,6 +13,7 @@ public enum ResultCode {
     PARAM_IS_BLANK(1002, "Parameter is blank"),
     PARAM_TYPE_ERROR(1003, "Parameter type error"),
     PARAM_NOT_COMPLETE(1004, "Missing parameter"),
+    PARAM_NOT_INVALID(1005, "Invalid email format"),
 
     /* User Errors: 2000～2999 */
     USER_NOT_LOGIN(2001, "User not logged in"),

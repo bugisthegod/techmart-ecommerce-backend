@@ -1,6 +1,7 @@
 package com.abel.ecommerce.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -20,8 +21,9 @@ public class UserRegisterRequest {
     private String password;
 
     @Schema(description = "Email address", example = "abel@example.com")
+    @Email(message = "Invalid email format")
     @NotBlank(message = "Email cannot be empty")
-    @Size(message = "Invalid email format")
+//    @Size(message = "Invalid email format")
     private String email;
 
     private String phone;

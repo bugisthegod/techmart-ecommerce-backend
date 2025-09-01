@@ -5,6 +5,7 @@ import com.abel.ecommerce.dto.request.UserRegisterRequest;
 import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.User;
+import com.abel.ecommerce.exception.IncorrectPasswordException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
 import com.abel.ecommerce.service.UserService;
@@ -70,7 +71,7 @@ public class UserController {
             LoginResponse loginResponse = userService.login(request);
             return ResponseResult.ok(loginResponse);
         }
-        catch (UserNotFoundException e) {
+        catch (UserNotFoundException | IncorrectPasswordException e) {
             return ResponseResult.error(e.getCode(), e.getMessage());
         }
         catch (Exception e) {

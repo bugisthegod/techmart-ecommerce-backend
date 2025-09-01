@@ -5,6 +5,7 @@ import com.abel.ecommerce.dto.request.UserRegisterRequest;
 import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.User;
+import com.abel.ecommerce.exception.IncorrectPasswordException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
 import com.abel.ecommerce.repository.UserRepository;
@@ -49,8 +50,8 @@ public class UserService {
 
     public LoginResponse login(UserLoginRequest request) throws Exception {
         User user = findByUsername(request.getUsername());
-        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Incorrect password");
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new IncorrectPasswordException(user.getUsername());
         }
         String token = JwtTokenUtil.generateToken(user.getUsername());
 
