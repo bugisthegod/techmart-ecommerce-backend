@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Order Management", description = "Order creation, payment, shipping and tracking")
 public class OrderController {
 
@@ -47,8 +49,10 @@ public class OrderController {
             OrderResponse response = convertToOrderResponse(order);
             return ResponseResult.ok(response);
         } catch (OrderNotFoundException e) {
+            log.error("Order cannot be found", e);
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
         } catch (Exception e) {
+            log.error("Exception: ", e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }

@@ -29,7 +29,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()  // Allow registration and login
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
-                        .anyRequest().authenticated()  // All other requests require authentication including categories
+                        .requestMatchers("/api/products/**", "/api/categories/**", "/api/cart/**", "/api/addresses/**", "api/orders/**").permitAll()  //
+                        // TEMPORARY:
+                        // Allow
+                        // public access to
+                        // products and
+                        // categories for testing
+                        .anyRequest().authenticated()  // All other requests require authentication
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
         return http.build();

@@ -59,6 +59,7 @@ public class OrderFacade {
         order.setUserId(userId);
         order.setOrderNo(newOrderNo);
         order.setTotalAmount(totalAmount);
+        order.setPayAmount(totalAmount); // Pay amount equals total amount (no discounts applied)
         order.setFreightAmount(freightAmount);
         order.setReceiverName(address.getReceiverName());
         order.setReceiverAddress(address.getFullAddress());
@@ -73,7 +74,7 @@ public class OrderFacade {
             orderItem.setOrderNo(newOrderNo);
             orderItem.setProductId(cartItem.getProductId());
             orderItem.setProductName(product.getName());
-            orderItem.setProductImage(product.getImages());
+            orderItem.setProductImage(product.getMainImage());
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setProductPrice(product.getPrice());
             orderItem.setTotalAmount(itemAmount);
