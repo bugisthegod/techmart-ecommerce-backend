@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "User Management", description = "User registration, login and profile management")
 public class UserController {
 
@@ -46,7 +48,12 @@ public class UserController {
             return ResponseResult.ok("User registered successfully with ID: " + user.getId());
         }
         catch (UserAlreadyExistsException e) {
+            log.error("User registration failed - user already exists: {}", e.getMessage(), e);
             return ResponseResult.error(e.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error during user registration", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -60,7 +67,12 @@ public class UserController {
             return ResponseResult.ok(userResponse);
         }
         catch (UserNotFoundException e) {
+            log.error("User not found: {}", e.getMessage(), e);
             return ResponseResult.error(e.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error when finding user by username: {}", username, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -72,10 +84,12 @@ public class UserController {
             return ResponseResult.ok(loginResponse);
         }
         catch (UserNotFoundException | IncorrectPasswordException e) {
+            log.error("Login failed: {}", e.getMessage(), e);
             return ResponseResult.error(e.getCode(), e.getMessage());
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error during login", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 

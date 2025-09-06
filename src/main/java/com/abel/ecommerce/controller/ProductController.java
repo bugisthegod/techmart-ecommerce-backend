@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Product Management")
 public class ProductController {
 
@@ -47,7 +49,8 @@ public class ProductController {
             return ResponseResult.ok("Product created successfully with ID: " + product.getId());
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Failed to create product", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -62,7 +65,12 @@ public class ProductController {
             return ResponseResult.ok(productResponse);
         }
         catch (ProductNotFoundException e) {
-            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST);
+            log.error("Product not found for update - ID: {}", id, e);
+            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error updating product with ID: {}", id, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -74,7 +82,12 @@ public class ProductController {
             return ResponseResult.ok(ResultCode.SUCCESS);
         }
         catch (ProductNotFoundException e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Product not found for deletion - ID: {}", id, e);
+            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error deleting product with ID: {}", id, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -88,7 +101,12 @@ public class ProductController {
             return ResponseResult.ok(productResponse);
         }
         catch (ProductNotFoundException e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Product not found - ID: {}", id, e);
+            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error finding product with ID: {}", id, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -111,7 +129,12 @@ public class ProductController {
             return ResponseResult.ok(productResponses);
         }
         catch (RuntimeException e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Runtime error finding products with pagination - categoryId: {}, status: {}, page: {}", categoryId, status, page, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
+        }
+        catch (Exception e) {
+            log.error("Unexpected error finding products with pagination - categoryId: {}, status: {}, page: {}", categoryId, status, page, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -135,7 +158,8 @@ public class ProductController {
 
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Failed to search products by name: {}", name, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 

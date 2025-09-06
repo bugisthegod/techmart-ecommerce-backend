@@ -79,7 +79,8 @@ public class OrderController {
             Page<OrderResponse> orderResponses = orders.map(this::convertToOrderResponse);
             return ResponseResult.ok(orderResponses);
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting user orders - userId: {}", userId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/addresses")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Address Management", description = "User shipping address management")
 public class AddressController {
 
@@ -38,6 +40,7 @@ public class AddressController {
             AddressResponse response = convertToResponse(address);
             return ResponseResult.ok(response);
         } catch (Exception e) {
+            log.error("Unexpected error creating address - userId: {}", userId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
@@ -53,11 +56,14 @@ public class AddressController {
             AddressResponse response = convertToResponse(address);
             return ResponseResult.ok(response);
         } catch (AddressNotFoundException e) {
+            log.error("Address not found for update - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (DefaultAddressException e) {
+            log.error("Default address exception during update - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error updating address - userId: {}, addressId: {}", userId, addressId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -70,11 +76,14 @@ public class AddressController {
             addressService.deleteAddress(userId, addressId);
             return ResponseResult.ok("Address deleted successfully");
         } catch (AddressNotFoundException e) {
+            log.error("Address not found for deletion - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (DefaultAddressException e) {
+            log.error("Cannot delete default address - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error deleting address - userId: {}, addressId: {}", userId, addressId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -89,7 +98,8 @@ public class AddressController {
                     .collect(Collectors.toList());
             return ResponseResult.ok(responses);
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting user addresses - userId: {}", userId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -103,9 +113,11 @@ public class AddressController {
             AddressResponse response = convertToResponse(address);
             return ResponseResult.ok(response);
         } catch (AddressNotFoundException e) {
+            log.error("Address not found - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting address by ID - userId: {}, addressId: {}", userId, addressId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -135,9 +147,11 @@ public class AddressController {
             addressService.setDefaultAddress(userId, addressId);
             return ResponseResult.ok("Default address updated successfully");
         } catch (AddressNotFoundException e) {
+            log.error("Address not found when setting default - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error setting default address - userId: {}, addressId: {}", userId, addressId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -149,7 +163,8 @@ public class AddressController {
             long count = addressService.getAddressCount(userId);
             return ResponseResult.ok(count);
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting address count - userId: {}", userId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 

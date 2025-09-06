@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Category Management", description = "Category creation, update, deletion and query operations")
 public class CategoryController {
 
@@ -37,11 +39,14 @@ public class CategoryController {
             CategoryResponse response = convertToResponse(category);
             return ResponseResult.ok(response);
         } catch (CategoryAlreadyExistsException e) {
+            log.error("Category already exists: {}", e.getMessage(), e);
             return ResponseResult.error(ResultCode.CATEGORY_ALREADY_EXIST.getCode(), e.getMessage());
         } catch (CategoryNotFoundException e) {
+            log.error("Parent category not found when creating category: {}", e.getMessage(), e);
             return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error creating category", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -56,11 +61,14 @@ public class CategoryController {
             CategoryResponse response = convertToResponse(category);
             return ResponseResult.ok(response);
         } catch (CategoryNotFoundException e) {
+            log.error("Category not found for update - ID: {}", id, e);
             return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
         } catch (CategoryAlreadyExistsException e) {
+            log.error("Category name already exists during update - ID: {}", id, e);
             return ResponseResult.error(ResultCode.CATEGORY_ALREADY_EXIST.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error updating category - ID: {}", id, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -72,11 +80,14 @@ public class CategoryController {
             categoryService.deleteCategory(id);
             return ResponseResult.ok("Category deleted successfully");
         } catch (CategoryNotFoundException e) {
+            log.error("Category not found for deletion - ID: {}", id, e);
             return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
         } catch (RuntimeException e) {
+            log.error("Runtime error deleting category - ID: {}", id, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error deleting category - ID: {}", id, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -89,9 +100,11 @@ public class CategoryController {
             CategoryResponse response = convertToResponse(category);
             return ResponseResult.ok(response);
         } catch (CategoryNotFoundException e) {
+            log.error("Category not found - ID: {}", id, e);
             return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting category - ID: {}", id, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -105,7 +118,8 @@ public class CategoryController {
                 .collect(Collectors.toList());
             return ResponseResult.ok(responses);
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting all categories", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -119,7 +133,8 @@ public class CategoryController {
                 .collect(Collectors.toList());
             return ResponseResult.ok(responses);
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting all categories", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -134,7 +149,8 @@ public class CategoryController {
                 .collect(Collectors.toList());
             return ResponseResult.ok(responses);
         } catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting all categories", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 

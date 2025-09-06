@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Shopping Cart Management")
 public class CartController {
 
@@ -45,13 +47,16 @@ public class CartController {
             return ResponseResult.ok(response);
         }
         catch (ProductNotFoundException e) {
-            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST);
+            log.error("Product not found when adding to cart - userId: {}, productId: {}", userId, request.getProductId(), e);
+            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
         }
         catch (InsufficientStockException e) {
-            return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK);
+            log.error("Insufficient stock when adding to cart - userId: {}, productId: {}, quantity: {}", userId, request.getProductId(), request.getQuantity(), e);
+            return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK.getCode(), e.getMessage());
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error adding to cart - userId: {}", userId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -67,13 +72,16 @@ public class CartController {
             return ResponseResult.ok(response);
         }
         catch (CartItemNotFoundException e) {
-            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST);
+            log.error("Cart item not found for update - userId: {}, cartItemId: {}", userId, cartItemId, e);
+            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
         }
         catch (InsufficientStockException e) {
-            return ResponseResult.error(ResultCode.PRODUCT_ALREADY_EXIST);
+            log.error("Insufficient stock when updating cart item - userId: {}, cartItemId: {}, quantity: {}", userId, cartItemId, request.getQuantity(), e);
+            return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK.getCode(), e.getMessage());
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error updating cart item - userId: {}, cartItemId: {}", userId, cartItemId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -87,10 +95,12 @@ public class CartController {
             return ResponseResult.ok("Item removed from cart successfully");
         }
         catch (CartItemNotFoundException e) {
-            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST);
+            log.error("Cart item not found for removal - userId: {}, cartItemId: {}", userId, cartItemId, e);
+            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error removing from cart - userId: {}, cartItemId: {}", userId, cartItemId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -104,7 +114,8 @@ public class CartController {
             return ResponseResult.ok(cartResponse);
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error getting cart - userId: {}", userId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -117,7 +128,8 @@ public class CartController {
             return ResponseResult.ok("Cart cleared successfully");
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error clearing cart - userId: {}", userId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
@@ -132,10 +144,12 @@ public class CartController {
             return ResponseResult.ok("Selection status updated successfully");
         }
         catch (CartItemNotFoundException e) {
-            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST);
+            log.error("Cart item not found for removal - userId: {}, cartItemId: {}", userId, cartItemId, e);
+            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
         }
         catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+            log.error("Unexpected error removing from cart - userId: {}, cartItemId: {}", userId, cartItemId, e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
 
