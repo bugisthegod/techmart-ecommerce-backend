@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 @Data
 public class Category {
 
+    public static final Integer ACTIVE_CATEGORY = 1;
+    public static final Integer NONACTIVE_CATEGORY = 0;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,7 +29,7 @@ public class Category {
     private Integer sortOrder;
 
     @Column(columnDefinition = "TINYINT DEFAULT 1")
-    private Integer status;
+    private Integer status = ACTIVE_CATEGORY;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

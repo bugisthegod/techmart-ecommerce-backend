@@ -56,7 +56,7 @@ public class Order {
 
     @NotNull(message = "Order status cannot be null")
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-    private Integer status;
+    private Integer status = STATUS_PENDING_PAYMENT;
 
     @Column(name = "payment_time")
     private LocalDateTime paymentTime;

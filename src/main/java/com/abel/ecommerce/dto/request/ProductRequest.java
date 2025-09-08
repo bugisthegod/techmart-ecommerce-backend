@@ -15,11 +15,9 @@ public class ProductRequest {
     private String name;
 
     @Schema(description = "Category ID", example = "9527")
-    @NotBlank(message = "Category ID cannot be empty")
     private Long categoryId;
 
     @Schema(description = "Product price", example = "20.00")
-    @NotBlank(message = "Product price cannot by empty")
     private BigDecimal price;
 
     private BigDecimal originalPrice;

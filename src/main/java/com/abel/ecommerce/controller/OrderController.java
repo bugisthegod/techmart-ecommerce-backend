@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -174,6 +175,7 @@ public class OrderController {
     }
 
     @Operation(summary = "Ship order", description = "Mark order as shipped (Admin only)")
+    @PreAuthorize("hasRole('ORDER_ADMIN') or hasRole('SUPER_ADMIN')")
     @PutMapping("/{orderId}/ship")
     public ResponseResult<String> shipOrder(
             @Parameter(description = "Order ID") @PathVariable Long orderId) {

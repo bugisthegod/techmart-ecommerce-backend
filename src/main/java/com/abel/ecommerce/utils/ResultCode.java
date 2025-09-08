@@ -4,6 +4,11 @@ public enum ResultCode {
 
     /* Success */
     SUCCESS(200, "Success"),
+    BAD_REQUEST(400, "Bad Request"),
+    UNAUTHORIZED(401, "Unauthorized"),
+    FORBIDDEN(403, "Forbidden"),
+    NOT_FOUND(404, "Not Found"),
+    INTERNAL_ERROR(500, "Internal Server Error"),
 
     /* Default Failure */
     COMMON_FAIL(999, "Operation failed"),

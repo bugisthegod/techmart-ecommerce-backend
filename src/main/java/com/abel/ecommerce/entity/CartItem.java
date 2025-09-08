@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 @Data
 public class CartItem {
 
+    // Default status constants
+    public static final Integer DEFAULT_SELECTED = 1;
+    public static final Integer NON_DEFAULT_SELECTED = 0;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,7 +28,7 @@ public class CartItem {
     private Integer quantity;
 
     @Column(columnDefinition = "TINYINT DEFAULT 1")
-    private Integer selected;
+    private Integer selected = DEFAULT_SELECTED;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

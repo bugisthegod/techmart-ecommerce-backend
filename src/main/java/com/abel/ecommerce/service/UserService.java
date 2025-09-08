@@ -4,14 +4,18 @@ import com.abel.ecommerce.dto.request.UserLoginRequest;
 import com.abel.ecommerce.dto.request.UserRegisterRequest;
 import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
+import com.abel.ecommerce.entity.Role;
 import com.abel.ecommerce.entity.User;
 import com.abel.ecommerce.exception.IncorrectPasswordException;
+import com.abel.ecommerce.exception.RoleNotFoundException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
+import com.abel.ecommerce.repository.RoleRepository;
 import com.abel.ecommerce.repository.UserRepository;
 import com.abel.ecommerce.utils.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final RoleRepository roleRepository;
 
     @Transactional
     public User register(UserRegisterRequest request) {
@@ -43,7 +49,11 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
-        user.setStatus(1); // Active status
+        user.setStatus(User.ACTIVE_USER); // Active status
+
+        Role customerRole = roleRepository.findByCode("CUSTOMER")
+                .orElseThrow(() -> new RoleNotFoundException("CUSTOMER"));
+        user.getRoles().add(customerRole);
 
         return userRepository.save(user);
     }
@@ -69,5 +79,7 @@ public class UserService {
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username, "username"));
     }
+
+
 
 }
