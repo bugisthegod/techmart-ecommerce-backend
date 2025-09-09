@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @Operation(summary = "Create new category", description = "Create a new product category")
+    @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SUPER_ADMIN')")
     @PostMapping
     public ResponseResult<CategoryResponse> createCategory(
             @Parameter(description = "Category creation data") 
