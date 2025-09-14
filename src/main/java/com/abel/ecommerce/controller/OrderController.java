@@ -14,9 +14,11 @@ import com.abel.ecommerce.utils.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -41,18 +44,31 @@ public class OrderController {
     @PostMapping
     public ResponseResult<OrderResponse> createOrder(
             @Parameter(description = "User ID") @RequestParam Long userId,
-            @Parameter(description = "Order data") @Valid @RequestBody OrderRequest request) {
+            @Parameter(description = "Order data") @Valid @RequestBody OrderRequest request,
+            HttpServletRequest httpRequest) {
         try {
-            // Use facade for complex business logic
+
+            // 1. Get order idempotency token from request header
+            String orderToken = httpRequest.getHeader("Idempotency-Token");
+            if (StringUtils.isEmpty(orderToken)) return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Missing idempotency token");
+
+            // 2. Validate if idempotency token exists
+            if (!orderService.validateAndDeleteOrderToken(orderToken))
+                return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Order already submitted " +
+                        "or invalid token");
+
+            // 3. Use facade for complex business logic
             Order order = orderFacade.createOrder(userId, request);
-            
+
             // Convert to response DTO in controller
             OrderResponse response = convertToOrderResponse(order);
             return ResponseResult.ok(response);
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             log.error("Order cannot be found", e);
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Exception: ", e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -68,18 +84,20 @@ public class OrderController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<Order> orders;
-            
+
             // Get entities from service
             if (status != null) {
                 orders = orderService.findOrdersByUserIdAndStatus(userId, status, pageable);
-            } else {
+            }
+            else {
                 orders = orderService.findOrdersByUserId(userId, pageable);
             }
-            
+
             // Convert to response DTOs in controller
             Page<OrderResponse> orderResponses = orders.map(this::convertToOrderResponse);
             return ResponseResult.ok(orderResponses);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error getting user orders - userId: {}", userId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -93,13 +111,15 @@ public class OrderController {
         try {
             // Get entity from service
             Order order = orderService.findOrderByIdAndUserId(orderId, userId);
-            
+
             // Convert to response DTO
             OrderResponse response = convertToOrderResponse(order);
             return ResponseResult.ok(response);
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
@@ -111,13 +131,15 @@ public class OrderController {
         try {
             // Get entity from service
             Order order = orderService.findOrderByOrderNo(orderNo);
-            
+
             // Convert to response DTO
             OrderResponse response = convertToOrderResponse(order);
             return ResponseResult.ok(response);
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
@@ -129,11 +151,12 @@ public class OrderController {
         try {
             // Get entities from service
             List<OrderItem> items = orderService.findOrderItems(orderId);
-            
+
             // Convert to response DTOs
             List<OrderItemResponse> responses = convertToOrderItemResponses(items);
             return ResponseResult.ok(responses);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
@@ -147,11 +170,14 @@ public class OrderController {
             // Service returns entity
             Order paidOrder = orderService.payOrder(userId, orderId);
             return ResponseResult.ok("Order payment processed successfully. Order No: " + paidOrder.getOrderNo());
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (OrderStatusException e) {
+        }
+        catch (OrderStatusException e) {
             return ResponseResult.error(ResultCode.ORDER_STATUS_ERROR.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
@@ -165,11 +191,14 @@ public class OrderController {
             // Use facade for complex business logic (restore stock)
             orderFacade.cancelOrder(userId, orderId);
             return ResponseResult.ok("Order cancelled successfully");
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (OrderStatusException e) {
+        }
+        catch (OrderStatusException e) {
             return ResponseResult.error(ResultCode.ORDER_CANNOT_CANCEL.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
@@ -183,11 +212,14 @@ public class OrderController {
             // Service returns entity
             Order shippedOrder = orderService.shipOrder(orderId);
             return ResponseResult.ok("Order shipped successfully. Order No: " + shippedOrder.getOrderNo());
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (OrderStatusException e) {
+        }
+        catch (OrderStatusException e) {
             return ResponseResult.error(ResultCode.ORDER_STATUS_ERROR.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
@@ -201,11 +233,14 @@ public class OrderController {
             // Service returns entity
             Order completedOrder = orderService.completeOrder(userId, orderId);
             return ResponseResult.ok("Order completed successfully. Order No: " + completedOrder.getOrderNo());
-        } catch (OrderNotFoundException e) {
+        }
+        catch (OrderNotFoundException e) {
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        } catch (OrderStatusException e) {
+        }
+        catch (OrderStatusException e) {
             return ResponseResult.error(ResultCode.ORDER_STATUS_ERROR.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
@@ -219,17 +254,31 @@ public class OrderController {
             long count;
             if (status != null) {
                 count = orderService.countOrdersByUserIdAndStatus(userId, status);
-            } else {
+            }
+            else {
                 count = orderService.countOrdersByUserId(userId);
             }
             return ResponseResult.ok(count);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
-    
+
+    @Operation(summary = "Generate token for creating order")
+    @PostMapping("/generateOrderToken")
+    public ResponseResult<String> getOrderToken(@Parameter(description = "User ID") @RequestParam Long userId) {
+        try {
+            String orderToken = orderService.generateOrderToken(userId);
+            return ResponseResult.ok(orderToken);
+        }
+        catch (Exception e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL);
+        }
+    }
+
     // ============= Helper methods for DTO conversion (in Controller layer) =============
-    
+
     /**
      * Convert Order entity to OrderResponse DTO
      * This conversion logic is in the Controller layer following Pattern 1
@@ -237,22 +286,22 @@ public class OrderController {
     private OrderResponse convertToOrderResponse(Order order) {
         OrderResponse response = new OrderResponse();
         BeanUtils.copyProperties(order, response);
-        
+
         // Set computed fields
         response.setStatusText(order.getStatusText());
         response.setCanBeCancelled(order.canBeCancelled());
         response.setCanBeShipped(order.canBeShipped());
         response.setCanBeCompleted(order.canBeCompleted());
-        
+
         // Load order items
         List<OrderItem> items = orderService.findOrderItems(order.getId());
         List<OrderItemResponse> itemResponses = convertToOrderItemResponses(items);
         response.setItems(itemResponses);
         response.setTotalItems(itemResponses.size());
-        
+
         return response;
     }
-    
+
     /**
      * Convert OrderItem entity to OrderItemResponse DTO
      */
@@ -261,7 +310,7 @@ public class OrderController {
         BeanUtils.copyProperties(item, response);
         return response;
     }
-    
+
     /**
      * Convert list of OrderItem entities to OrderItemResponse DTOs
      */

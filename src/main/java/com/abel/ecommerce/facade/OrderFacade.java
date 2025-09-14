@@ -7,6 +7,8 @@ import com.abel.ecommerce.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Or;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,12 +25,17 @@ public class OrderFacade {
     private final ProductService productService;
     private final OrderService orderService;
 
+    private final StringRedisTemplate redisTemplate;
+
     /**
      * Create order from cart
      * This is the most complex business logic involving multiple tables and transactions
      */
     @Transactional
     public Order createOrder(Long userId, OrderRequest request) {
+
+
+
         // Now only focus on create order
         // Check is there any selected cart items
         List<CartItem> selectedCartItems = cartService.getSelectedCartItems(userId);

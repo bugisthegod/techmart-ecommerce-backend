@@ -8,14 +8,21 @@ import com.abel.ecommerce.repository.OrderItemRepository;
 import com.abel.ecommerce.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Or;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +31,12 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
+    // Cache key prefix for user roles
+    private static final String ORDER_TOKEN_KEY = "order:token:";
+    private static final long CACHE_EXPIRE_MINUTES = 30;
 
 
     /**
@@ -92,24 +104,24 @@ public class OrderService {
     public Order cancelOrder(Long userId, Long orderId) {
         // Find order and verify it belongs to user
         Order order = findOrderByIdAndUserId(orderId, userId);
-        
+
         // Check if order can be cancelled
         if (!order.canBeCancelled()) {
             throw OrderStatusException.cannotCancel(order.getOrderNo());
         }
-        
+
         // Update order status
         order.setStatus(Order.STATUS_CANCELLED);
         return orderRepository.save(order);
     }
 
     // Query methods - return Entities, not DTOs
-    
+
     public Order findOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
     }
-    
+
     public Order findOrderByIdAndUserId(Long orderId, Long userId) {
         return orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found or doesn't belong to user"));
@@ -131,7 +143,7 @@ public class OrderService {
     public List<OrderItem> findOrderItems(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
     }
-    
+
     public List<OrderItem> findOrderItemsByOrderNo(String orderNo) {
         return orderItemRepository.findByOrderNo(orderNo);
     }
@@ -154,14 +166,30 @@ public class OrderService {
         String random = String.format("%03d", new Random().nextInt(1000));
         return timestamp + userSuffix + random;
     }
-    
+
+    public String generateOrderToken(Long userId) {
+        String token = "ORDER_TOKEN_" + System.currentTimeMillis() +
+                "_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8);
+        String key = ORDER_TOKEN_KEY + token;
+
+        // Store in Redis; expire 30 mins
+        ValueOperations<String, String> ops = redisTemplate.opsForValue();
+        ops.set(key, token, 30, TimeUnit.MINUTES);
+        return token;
+    }
+
+    public boolean validateAndDeleteOrderToken(String token) {
+        String key = ORDER_TOKEN_KEY + token;
+        return redisTemplate.delete(key);
+    }
+
     /**
      * Check if order exists by order number
      */
     public boolean existsByOrderNo(String orderNo) {
         return orderRepository.existsByOrderNo(orderNo);
     }
-    
+
     /**
      * Save order items
      */
@@ -169,7 +197,7 @@ public class OrderService {
     public List<OrderItem> saveOrderItems(List<OrderItem> orderItems) {
         return orderItemRepository.saveAll(orderItems);
     }
-    
+
     /**
      * Update order
      */
@@ -177,4 +205,5 @@ public class OrderService {
     public Order updateOrder(Order order) {
         return orderRepository.save(order);
     }
+
 }
