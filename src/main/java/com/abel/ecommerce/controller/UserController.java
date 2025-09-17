@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -90,6 +91,42 @@ public class UserController {
         catch (Exception e) {
             log.error("Unexpected error during login", e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
+        }
+    }
+
+    @Operation(summary = "User logout", description = "Invalidate JWT token and logout user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User logged out successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid or missing token"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid token")
+    })
+    @PostMapping("/logout")
+    public ResponseResult<String> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // Validate Authorization header format
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseResult.error(ResultCode.UNAUTHORIZED.getCode(), "Invalid Authorization header format");
+            }
+
+            // Extract token from Authorization header
+            String token = authorizationHeader.substring(7);
+
+            // Call service to logout (blacklist token)
+            userService.logout(token);
+
+            return ResponseResult.ok("User logged out successfully");
+        }
+        catch (IllegalArgumentException e) {
+            log.error("Logout failed - invalid token: {}", e.getMessage(), e);
+            return ResponseResult.error(ResultCode.PARAM_NOT_VALID.getCode(), e.getMessage());
+        }
+        catch (RuntimeException e) {
+            log.error("Logout failed - token validation error: {}", e.getMessage(), e);
+            return ResponseResult.error(ResultCode.UNAUTHORIZED.getCode(), "Invalid token");
+        }
+        catch (Exception e) {
+            log.error("Unexpected error during logout", e);
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Logout failed");
         }
     }
 

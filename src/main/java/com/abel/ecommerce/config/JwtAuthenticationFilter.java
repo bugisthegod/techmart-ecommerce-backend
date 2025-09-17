@@ -1,5 +1,6 @@
 package com.abel.ecommerce.config;
 
+import com.abel.ecommerce.service.TokenBlacklistService;
 import com.abel.ecommerce.service.UserRoleCacheService;
 import com.abel.ecommerce.utils.JwtTokenUtil;
 import jakarta.servlet.FilterChain;
@@ -26,6 +27,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserRoleCacheService userRoleCacheService;
 
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -34,8 +38,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (!StringUtils.isEmpty(token)) {
             try {
-                // Validate token
-                if (JwtTokenUtil.validateToken(token)) {
+                // Check if token is blacklisted
+                if (tokenBlacklistService.isTokenBlacklisted(token)) {
+                    logger.debug("Token is blacklisted, authentication denied");
+                } else if (JwtTokenUtil.validateToken(token)) {
                     // Extract username from token
                     String username = JwtTokenUtil.getUsernameFromToken(token);
 
@@ -46,7 +52,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     List<SimpleGrantedAuthority> authorities = userRoles.stream()
                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                             .toList();
-
 
                     // Create authentication object
                     UsernamePasswordAuthenticationToken authentication =

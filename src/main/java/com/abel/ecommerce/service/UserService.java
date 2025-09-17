@@ -29,6 +29,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final RoleRepository roleRepository;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Transactional
     public User register(UserRegisterRequest request) {
@@ -80,6 +81,22 @@ public class UserService {
         return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username, "username"));
     }
 
+    /**
+     * Logout user by blacklisting the provided token
+     * @param token JWT token to invalidate
+     */
+    public void logout(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Token cannot be null or empty");
+        }
 
+        // Validate token format and extract username for logging
+        try {
+            String username = JwtTokenUtil.getUsernameFromToken(token);
+            tokenBlacklistService.blacklistToken(token);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid token provided for logout", e);
+        }
+    }
 
 }
