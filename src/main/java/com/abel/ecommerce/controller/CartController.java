@@ -65,9 +65,9 @@ public class CartController {
     public ResponseResult<CartItemResponse> updateCartItem(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
-            @Parameter(description = "Updated cart item data") @Valid @RequestBody CartItemRequest request) {
+            @Parameter(description = "Cart item quantity") @RequestParam Integer quantity) {
         try {
-            CartItem cartItem = cartService.updateCartItem(userId, cartItemId, request);
+            CartItem cartItem = cartService.updateCartItem(userId, cartItemId, quantity);
             CartItemResponse response = convertToCartItemResponse(cartItem);
             return ResponseResult.ok(response);
         }
@@ -76,7 +76,7 @@ public class CartController {
             return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
         }
         catch (InsufficientStockException e) {
-            log.error("Insufficient stock when updating cart item - userId: {}, cartItemId: {}, quantity: {}", userId, cartItemId, request.getQuantity(), e);
+            log.error("Insufficient stock when updating cart item - userId: {}, cartItemId: {}, quantity: {}", userId, cartItemId, quantity, e);
             return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK.getCode(), e.getMessage());
         }
         catch (Exception e) {

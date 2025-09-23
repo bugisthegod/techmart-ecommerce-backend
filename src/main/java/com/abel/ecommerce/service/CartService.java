@@ -50,21 +50,23 @@ public class CartService {
     }
 
     @Transactional
-    public CartItem updateCartItem(Long userId, Long cartItemId, CartItemRequest request) {
+    public CartItem updateCartItem(Long userId, Long cartItemId, Integer quantity) {
         // Check if cart existed
         CartItem cartItemById = findCartItemById(cartItemId);
 
         // Check if cart item belongs to this user
         if (!cartItemById.getUserId().equals(userId)) throw new CartItemNotFoundException("Cart Item does not belong to user");
 
-        Product productById = productService.findProductById(request.getProductId());
+        // Get product using existing productId from cartItem
+        Product productById = productService.findProductById(cartItemById.getProductId());
 
         // Check if new quantity exceeds stock
-        if (request.getQuantity() > productById.getStock())
-            throw new InsufficientStockException(productById.getName(), productById.getStock(), request.getQuantity());
+        if (quantity > productById.getStock())
+            throw new InsufficientStockException(productById.getName(), productById.getStock(), quantity);
 
-        // Update cart Item
-        cartItemById.setQuantity(request.getQuantity());
+        // Update cart Item quantity and set as selected by default
+        cartItemById.setQuantity(quantity);
+        cartItemById.setSelected(1); // Default selected
         return cartItemRepository.save(cartItemById);
     }
 
