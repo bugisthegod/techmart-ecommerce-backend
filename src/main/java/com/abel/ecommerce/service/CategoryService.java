@@ -2,102 +2,69 @@ package com.abel.ecommerce.service;
 
 import com.abel.ecommerce.dto.request.CategoryRequest;
 import com.abel.ecommerce.entity.Category;
-import com.abel.ecommerce.exception.CategoryAlreadyExistsException;
-import com.abel.ecommerce.exception.CategoryNotFoundException;
-import com.abel.ecommerce.repository.CategoryRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class CategoryService {
+public interface CategoryService {
 
-    private final CategoryRepository categoryRepository;
+    /**
+     * Create a new category
+     * @param request Category creation request
+     * @return Created category
+     */
+    Category createCategory(CategoryRequest request);
 
-    @Transactional
-    public Category createCategory(CategoryRequest request) {
-        // Check if category name already exists
-        if (categoryRepository.existsByName(request.getName())) {
-            throw CategoryAlreadyExistsException.name(request.getName());
-        }
+    /**
+     * Update an existing category
+     * @param id Category ID
+     * @param request Category update request
+     * @return Updated category
+     */
+    Category updateCategory(Long id, CategoryRequest request);
 
-        // Check if parent category exists (if parentId is not 0)
-        if (request.getParentId() != null && request.getParentId() > 0) {
-            if (!categoryRepository.existsByIdAndStatus(request.getParentId(), 1)) {
-                throw new CategoryNotFoundException(request.getParentId(), "parent ID");
-            }
-        }
+    /**
+     * Delete a category by ID
+     * @param id Category ID
+     */
+    void deleteCategory(Long id);
 
-        // Create category
-        Category category = new Category();
-        BeanUtils.copyProperties(request, category);
+    /**
+     * Find category by ID
+     * @param id Category ID
+     * @return Category entity
+     */
+    Category findCategoryById(Long id);
 
-        return categoryRepository.save(category);
-    }
+    /**
+     * Find all active categories
+     * @return List of active categories
+     */
+    List<Category> findAllCategories();
 
-    @Transactional
-    public Category updateCategory(Long id, CategoryRequest request) {
-        // Find existing category
-        Category existingCategory = findCategoryById(id);
+    /**
+     * Find top-level categories (categories without parent)
+     * @return List of top-level categories
+     */
+    List<Category> findTopLevelCategories();
 
-        // Check if new name conflicts with other categories
-        if (!existingCategory.getName().equals(request.getName()) &&
-                categoryRepository.existsByName(request.getName())) {
-            throw CategoryAlreadyExistsException.name(request.getName());
-        }
+    /**
+     * Find subcategories by parent ID
+     * @param parentId Parent category ID
+     * @return List of subcategories
+     */
+    List<Category> findSubcategories(Long parentId);
 
-        // Check if parent category exists (if parentId is not 0)
-        if (request.getParentId() != null && request.getParentId() > 0) {
-            if (!categoryRepository.existsByIdAndStatus(request.getParentId(), 1)) {
-                throw new CategoryNotFoundException(request.getParentId(), "parent ID");
-            }
-        }
+    /**
+     * Check if category exists
+     * @param categoryId Category ID
+     * @return true if category exists and is active
+     */
+    boolean categoryExists(Long categoryId);
 
-        // Update category
-        BeanUtils.copyProperties(request, existingCategory);
-
-        return categoryRepository.save(existingCategory);
-    }
-
-    public void deleteCategory(Long id) {
-        // Check if category exists
-        findCategoryById(id);
-
-        // Check if category has subcategories
-        long subcategoryCount = categoryRepository.countByParentId(id);
-        if (subcategoryCount > 0) {
-            throw new RuntimeException("Cannot delete category with subcategories");
-        }
-
-        categoryRepository.deleteById(id);
-    }
-
-    public Category findCategoryById(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException(id, "ID"));
-    }
-
-    public List<Category> findAllCategories() {
-        return categoryRepository.findByStatus(1);
-    }
-
-    public List<Category> findTopLevelCategories() {
-        return categoryRepository.findByParentIdAndStatusOrderBySortOrder(0L, 1);
-    }
-
-    public List<Category> findSubcategories(Long parentId) {
-        return categoryRepository.findByParentIdAndStatusOrderBySortOrder(parentId, 1);
-    }
-
-    public boolean categoryExists(Long categoryId) {
-        return categoryRepository.existsByIdAndStatus(categoryId, 1);
-    }
-
-    public long getSubcategoryCount(Long categoryId) {
-        return categoryRepository.countByParentId(categoryId);
-    }
+    /**
+     * Get count of subcategories
+     * @param categoryId Parent category ID
+     * @return Number of subcategories
+     */
+    long getSubcategoryCount(Long categoryId);
 }

@@ -2,208 +2,151 @@ package com.abel.ecommerce.service;
 
 import com.abel.ecommerce.entity.Order;
 import com.abel.ecommerce.entity.OrderItem;
-import com.abel.ecommerce.exception.OrderNotFoundException;
-import com.abel.ecommerce.exception.OrderStatusException;
-import com.abel.ecommerce.repository.OrderItemRepository;
-import com.abel.ecommerce.repository.OrderRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-@Service
-@RequiredArgsConstructor
-public class OrderService {
-
-    private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
-
-    @Autowired
-    private StringRedisTemplate redisTemplate;
-
-    // Cache key prefix for user roles
-    private static final String ORDER_TOKEN_KEY = "order:token:";
-    private static final long CACHE_EXPIRE_MINUTES = 30;
-
+public interface OrderService {
 
     /**
      * Pay order (simulate payment)
+     * @param userId User ID
+     * @param orderId Order ID
+     * @return Updated order
      */
-    @Transactional
-    public Order payOrder(Long userId, Long orderId) {
-        // Check if order exists and belongs to user
-        Order order = findOrderByIdAndUserId(orderId, userId);
-
-        // Check if status is pending payment
-        if (!order.isPendingPayment()) {
-            throw new OrderStatusException("Payment failed: Order is not in pending payment status");
-        }
-
-        // Update order status and payment time
-        order.setStatus(Order.STATUS_PAID);
-        order.setPaymentTime(LocalDateTime.now());
-        return orderRepository.save(order);
-    }
+    Order payOrder(Long userId, Long orderId);
 
     /**
      * Ship order
+     * @param orderId Order ID
+     * @return Updated order
      */
-    @Transactional
-    public Order shipOrder(Long orderId) {
-        // Check if order exists
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
-
-        // Check if status is paid
-        if (!order.canBeShipped()) {
-            throw new OrderStatusException("Only paid order can be shipped");
-        }
-
-        // Update order status and delivery time
-        order.setStatus(Order.STATUS_SHIPPED);
-        order.setDeliveryTime(LocalDateTime.now());
-        return orderRepository.save(order);
-    }
+    Order shipOrder(Long orderId);
 
     /**
      * Complete order
+     * @param userId User ID
+     * @param orderId Order ID
+     * @return Updated order
      */
-    @Transactional
-    public Order completeOrder(Long userId, Long orderId) {
-        // Find order and verify it belongs to user
-        Order order = findOrderByIdAndUserId(orderId, userId);
-
-        // Verify order status
-        if (!order.canBeCompleted()) {
-            throw OrderStatusException.cannotComplete(order.getOrderNo());
-        }
-
-        // Update order status and receive time
-        order.setReceiveTime(LocalDateTime.now());
-        order.setStatus(Order.STATUS_COMPLETED);
-        return orderRepository.save(order);
-    }
+    Order completeOrder(Long userId, Long orderId);
 
     /**
      * Cancel order
+     * @param userId User ID
+     * @param orderId Order ID
+     * @return Updated order
      */
-    @Transactional
-    public Order cancelOrder(Long userId, Long orderId) {
-        // Find order and verify it belongs to user
-        Order order = findOrderByIdAndUserId(orderId, userId);
+    Order cancelOrder(Long userId, Long orderId);
 
-        // Check if order can be cancelled
-        if (!order.canBeCancelled()) {
-            throw OrderStatusException.cannotCancel(order.getOrderNo());
-        }
+    /**
+     * Find order by ID
+     * @param orderId Order ID
+     * @return Order entity
+     */
+    Order findOrderById(Long orderId);
 
-        // Update order status
-        order.setStatus(Order.STATUS_CANCELLED);
-        return orderRepository.save(order);
-    }
+    /**
+     * Find order by ID and user ID
+     * @param orderId Order ID
+     * @param userId User ID
+     * @return Order entity
+     */
+    Order findOrderByIdAndUserId(Long orderId, Long userId);
 
-    // Query methods - return Entities, not DTOs
+    /**
+     * Find orders by user ID with pagination
+     * @param userId User ID
+     * @param pageable Pagination parameters
+     * @return Page of orders
+     */
+    Page<Order> findOrdersByUserId(Long userId, Pageable pageable);
 
-    public Order findOrderById(Long orderId) {
-        return orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
-    }
+    /**
+     * Find orders by user ID and status with pagination
+     * @param userId User ID
+     * @param status Order status
+     * @param pageable Pagination parameters
+     * @return Page of orders
+     */
+    Page<Order> findOrdersByUserIdAndStatus(Long userId, Integer status, Pageable pageable);
 
-    public Order findOrderByIdAndUserId(Long orderId, Long userId) {
-        return orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found or doesn't belong to user"));
-    }
+    /**
+     * Find order by order number
+     * @param orderNo Order number
+     * @return Order entity
+     */
+    Order findOrderByOrderNo(String orderNo);
 
-    public Page<Order> findOrdersByUserId(Long userId, Pageable pageable) {
-        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
-    }
+    /**
+     * Find order items by order ID
+     * @param orderId Order ID
+     * @return List of order items
+     */
+    List<OrderItem> findOrderItems(Long orderId);
 
-    public Page<Order> findOrdersByUserIdAndStatus(Long userId, Integer status, Pageable pageable) {
-        return orderRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, status, pageable);
-    }
+    /**
+     * Find order items by order number
+     * @param orderNo Order number
+     * @return List of order items
+     */
+    List<OrderItem> findOrderItemsByOrderNo(String orderNo);
 
-    public Order findOrderByOrderNo(String orderNo) {
-        return orderRepository.findByOrderNo(orderNo)
-                .orElseThrow(() -> new OrderNotFoundException(orderNo, "order number"));
-    }
+    /**
+     * Count orders by user ID
+     * @param userId User ID
+     * @return Number of orders
+     */
+    long countOrdersByUserId(Long userId);
 
-    public List<OrderItem> findOrderItems(Long orderId) {
-        return orderItemRepository.findByOrderId(orderId);
-    }
-
-    public List<OrderItem> findOrderItemsByOrderNo(String orderNo) {
-        return orderItemRepository.findByOrderNo(orderNo);
-    }
-
-    public long countOrdersByUserId(Long userId) {
-        return orderRepository.countByUserId(userId);
-    }
-
-    public long countOrdersByUserIdAndStatus(Long userId, Integer status) {
-        return orderRepository.countByUserIdAndStatus(userId, status);
-    }
+    /**
+     * Count orders by user ID and status
+     * @param userId User ID
+     * @param status Order status
+     * @return Number of orders
+     */
+    long countOrdersByUserIdAndStatus(Long userId, Integer status);
 
     /**
      * Generate unique order number
+     * @param userId User ID
+     * @return Generated order number
      */
-    public String generateOrderNo(Long userId) {
-        // Format: timestamp(yyyyMMddHHmmss) + userSuffix + random
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String userSuffix = String.format("%04d", userId % 10000);
-        String random = String.format("%03d", new Random().nextInt(1000));
-        return timestamp + userSuffix + random;
-    }
+    String generateOrderNo(Long userId);
 
-    public String generateOrderToken(Long userId) {
-        String token = "ORDER_TOKEN_" + System.currentTimeMillis() +
-                "_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8);
-        String key = ORDER_TOKEN_KEY + token;
+    /**
+     * Generate order token for idempotency
+     * @param userId User ID
+     * @return Generated order token
+     */
+    String generateOrderToken(Long userId);
 
-        // Store in Redis; expire 30 mins
-        ValueOperations<String, String> ops = redisTemplate.opsForValue();
-        ops.set(key, token, 30, TimeUnit.MINUTES);
-        return token;
-    }
-
-    public boolean validateAndDeleteOrderToken(String token) {
-        String key = ORDER_TOKEN_KEY + token;
-        return redisTemplate.delete(key);
-    }
+    /**
+     * Validate and delete order token
+     * @param token Order token
+     * @return true if token was valid and deleted
+     */
+    boolean validateAndDeleteOrderToken(String token);
 
     /**
      * Check if order exists by order number
+     * @param orderNo Order number
+     * @return true if order exists
      */
-    public boolean existsByOrderNo(String orderNo) {
-        return orderRepository.existsByOrderNo(orderNo);
-    }
+    boolean existsByOrderNo(String orderNo);
 
     /**
      * Save order items
+     * @param orderItems List of order items
+     * @return List of saved order items
      */
-    @Transactional
-    public List<OrderItem> saveOrderItems(List<OrderItem> orderItems) {
-        return orderItemRepository.saveAll(orderItems);
-    }
+    List<OrderItem> saveOrderItems(List<OrderItem> orderItems);
 
     /**
      * Update order
+     * @param order Order entity
+     * @return Updated order
      */
-    @Transactional
-    public Order updateOrder(Order order) {
-        return orderRepository.save(order);
-    }
-
+    Order updateOrder(Order order);
 }
