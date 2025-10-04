@@ -38,12 +38,13 @@ public class CartController {
 
     @Operation(summary = "Add product to cart")
     @PostMapping("/add")
-    public ResponseResult<CartItemResponse> addToCart(
+    public ResponseResult<CartResponse> addToCart(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item data") @Valid @RequestBody CartItemRequest request) {
         try {
-            CartItem cartItem = cartService.addToCart(userId, request);
-            CartItemResponse response = convertToCartItemResponse(cartItem);
+            cartService.addToCart(userId, request);
+            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+            CartResponse response = convertToCartResponse(userId, cartItems);
             return ResponseResult.ok(response);
         }
         catch (ProductNotFoundException e) {
@@ -62,13 +63,14 @@ public class CartController {
 
     @Operation(summary = "Update cart item quantity")
     @PutMapping("/update/{cartItemId}")
-    public ResponseResult<CartItemResponse> updateCartItem(
+    public ResponseResult<CartResponse> updateCartItem(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
             @Parameter(description = "Cart item quantity") @RequestParam Integer quantity) {
         try {
-            CartItem cartItem = cartService.updateCartItem(userId, cartItemId, quantity);
-            CartItemResponse response = convertToCartItemResponse(cartItem);
+            cartService.updateCartItem(userId, cartItemId, quantity);
+            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+            CartResponse response = convertToCartResponse(userId, cartItems);
             return ResponseResult.ok(response);
         }
         catch (CartItemNotFoundException e) {
@@ -87,12 +89,14 @@ public class CartController {
 
     @Operation(summary = "Remove item from cart")
     @DeleteMapping("/remove/{cartItemId}")
-    public ResponseResult<String> removeFromCart(
+    public ResponseResult<CartResponse> removeFromCart(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId) {
         try {
             cartService.removeFromCart(userId, cartItemId);
-            return ResponseResult.ok("Item removed from cart successfully");
+            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+            CartResponse response = convertToCartResponse(userId, cartItems);
+            return ResponseResult.ok(response);
         }
         catch (CartItemNotFoundException e) {
             log.error("Cart item not found for removal - userId: {}, cartItemId: {}", userId, cartItemId, e);
