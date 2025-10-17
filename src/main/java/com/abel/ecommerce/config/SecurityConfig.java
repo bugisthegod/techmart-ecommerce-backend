@@ -1,5 +1,6 @@
 package com.abel.ecommerce.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.Arrays;
 
 @Configuration
@@ -51,12 +53,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disable CSRF protection
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session for JWT
+                .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                })) // Make sure if request don't have token, response 401 error, no 403 forbidden // TODO: take time to search why?
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()  // Allow registration and login
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-//                        .anyRequest().authenticated()  // All other requests require authentication
-                        .anyRequest().permitAll()  // All other requests require authentication
+                                .requestMatchers("/api/users/register", "/api/users/login").permitAll()  // Allow registration and login
+                                .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
+//                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                                // TODO: know the difference with 403 and 401
+                        .anyRequest().authenticated()  // All other requests require authentication
+//                                .anyRequest().permitAll()  // All other requests require authentication
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
         return http.build();
