@@ -51,7 +51,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     long countByStatus(Integer status);
 
     @Query("SELECT p FROM Product p WHERE p.id = :id")
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Product findByIdForUpdate(@Param("id") Long id);
 
 }

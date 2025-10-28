@@ -60,7 +60,6 @@ public class SecurityConfig {
                                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()  // Allow registration and login
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
 //                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                                // TODO: know the difference with 403 and 401
                         .anyRequest().authenticated()  // All other requests require authentication
 //                                .anyRequest().permitAll()  // All other requests require authentication
                 )
