@@ -1,5 +1,6 @@
 package com.abel.ecommerce.service.impl;
 
+import com.abel.ecommerce.constant.RedisKeyConstants;
 import com.abel.ecommerce.dto.request.ProductRequest;
 import com.abel.ecommerce.entity.CartItem;
 import com.abel.ecommerce.entity.Product;
@@ -12,16 +13,27 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+
+    private final StringRedisTemplate stringRedisTemplate;
+
+    private final RedisTemplate<String, Object> objectRedisTemplate;
+
+
 
     @Override
     @Transactional
@@ -31,7 +43,7 @@ public class ProductServiceImpl implements ProductService {
         // Create Product
         Product product = new Product();
         BeanUtils.copyProperties(request, product);
-        product.setStatus(1); // Active status
+        product.setStatus(Product.ACTIVE_PRODUCT); // Active status
 
         return productRepository.save(product);
     }
@@ -76,7 +88,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product findProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id, "ID"));
+        // TODO: remove redis logic
+        String infoKey = RedisKeyConstants.PRODUCT_INFO_PREFIX + id;
+        Product product = (Product) objectRedisTemplate.opsForValue().get(infoKey);
+
+        if (product == null) {
+            Product productFromDB = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id, "ID"));
+            objectRedisTemplate.opsForValue().set(infoKey, productFromDB, 1 , TimeUnit.HOURS);
+            return productFromDB;
+        }
+        return product;
     }
 
     @Override
@@ -94,5 +115,7 @@ public class ProductServiceImpl implements ProductService {
         }
         return products;
     }
+
+
 
 }

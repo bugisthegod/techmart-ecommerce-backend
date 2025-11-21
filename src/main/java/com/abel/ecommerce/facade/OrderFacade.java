@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderFacade {
 
-    private final String PRODUCT_STOCK_LOCK_KEY = "product:stock:";
+    private final String PRODUCT_STOCK_LOCK_KEY = "product:stockLock:";
 
     private final CartService cartService;
     private final AddressService addressService;
@@ -31,6 +32,9 @@ public class OrderFacade {
     private final StringRedisTemplate redisTemplate;
     // When there is final/@NonNULL in field, @RequiredArgsConstructor will automatically generate a constructor
     private final RedissonClient redissonClient;
+
+    private final StockService stockService;
+
 
     /**
      * Create order from cart
@@ -122,6 +126,86 @@ public class OrderFacade {
             throw new OrderException("Order creation interrupted");
         }
     }
+
+//    /**
+//     *
+//     * @param userId
+//     * @param request
+//     * @return
+//     */
+//    public Order createOrderByRedis(Long userId, OrderRequest request){
+//        // Check is there any selected cart items
+//        List<CartItem> selectedCartItems = cartService.getSelectedCartItems(userId);
+//        if (selectedCartItems.isEmpty()) throw new OrderException("Please select items to order");
+//
+//        // Check address belongs to user
+//        Address address = addressService.findAddressByIdAndUserId(request.getAddressId(), userId);
+//
+//
+//        try {
+//
+//                // Check if product stock is enough and calculate total price
+//                // Reserve all products for order
+//                List<Product> products = new ArrayList<>();
+//
+//                BigDecimal freightAmount = new BigDecimal("10.00");
+//                BigDecimal totalAmount = selectedCartItems.stream().map(cartItem -> {
+//                    Long  productId = cartItem.getProductId();
+//                    Product product = productService.findProductById(productId);
+//                    products.add(product);
+//                    Long deductStockStatus = stockService.deductStock(productId, cartItem.getQuantity());
+//                    if (deductStockStatus != 1) throw new InsufficientStockException(product.getName(), product.getStock(), cartItem.getQuantity());
+//                    return product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
+//
+//                }).reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//                totalAmount.add(freightAmount);
+//
+//                // generate unique orderNo
+//                String newOrderNo = orderService.generateOrderNo(userId);
+//
+//                // Create order
+//                Order order = new Order();
+//                order.setUserId(userId);
+//                order.setOrderNo(newOrderNo);
+//                order.setTotalAmount(totalAmount);
+//                order.setPayAmount(totalAmount); // Pay amount equals total amount (no discounts applied)
+//                order.setFreightAmount(freightAmount);
+//                order.setReceiverName(address.getReceiverName());
+//                order.setReceiverAddress(address.getFullAddress());
+//                order.setReceiverPhone(address.getReceiverPhone());
+//                order.setStatus(Order.STATUS_PENDING_PAYMENT);
+//                orderService.updateOrder(order);
+//                List<OrderItem> orderItems = selectedCartItems.stream().map(cartItem -> {
+//                    Product product = productMap.get(cartItem.getProductId());
+//                    BigDecimal itemAmount = product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
+//                    OrderItem orderItem = new OrderItem();
+//                    orderItem.setOrderId(order.getId());
+//                    orderItem.setOrderNo(newOrderNo);
+//                    orderItem.setProductId(cartItem.getProductId());
+//                    orderItem.setProductName(product.getName());
+//                    orderItem.setProductImage(product.getMainImage());
+//                    orderItem.setQuantity(cartItem.getQuantity());
+//                    orderItem.setProductPrice(product.getPrice());
+//                    orderItem.setTotalAmount(itemAmount);
+//                    return orderItem;
+//                }).toList();
+//
+//                // Save all order items to database
+//                orderService.saveOrderItems(orderItems);
+//
+//                // Remove all selected cart items
+//                for (CartItem cartItem : selectedCartItems) {
+//                    cartService.removeFromCart(userId, cartItem.getId());
+//                }
+//                return order;
+//
+//        }
+//        catch (InsufficientStockException e) {
+//            stockService.restoreStock(e.getMessage());
+//            throw new OrderException("Order creation interrupted");
+//        }
+//    }
 
 
     /**

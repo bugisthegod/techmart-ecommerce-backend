@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Product {
 
+    public static final Integer ACTIVE_PRODUCT = 1;
+    public static final Integer NONACTIVE_PRODUCT = 0;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
