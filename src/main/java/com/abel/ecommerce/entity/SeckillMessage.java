@@ -13,7 +13,7 @@ public class SeckillMessage {
     // Status constants
     public static final Integer STATUS_PENDING = 0;
     public static final Integer STATUS_SENT = 1;
-    public static final Integer STAT1US_FAILED = 2;
+    public static final Integer STATUS_FAILED = 2;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
