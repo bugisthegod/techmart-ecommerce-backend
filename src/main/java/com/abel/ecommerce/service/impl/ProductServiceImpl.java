@@ -34,7 +34,6 @@ public class ProductServiceImpl implements ProductService {
     private final RedisTemplate<String, Object> objectRedisTemplate;
 
 
-
     @Override
     @Transactional
     public Product createProduct(ProductRequest request) {
@@ -88,16 +87,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product findProductById(Long id) {
-        // TODO: remove redis logic
-        String infoKey = RedisKeyConstants.PRODUCT_INFO_PREFIX + id;
-        Product product = (Product) objectRedisTemplate.opsForValue().get(infoKey);
-
-        if (product == null) {
-            Product productFromDB = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id, "ID"));
-            objectRedisTemplate.opsForValue().set(infoKey, productFromDB, 1 , TimeUnit.HOURS);
-            return productFromDB;
-        }
-        return product;
+        return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id, "ID"));
     }
 
     @Override
@@ -115,7 +105,6 @@ public class ProductServiceImpl implements ProductService {
         }
         return products;
     }
-
 
 
 }

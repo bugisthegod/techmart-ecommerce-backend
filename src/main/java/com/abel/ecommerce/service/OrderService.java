@@ -144,9 +144,17 @@ public interface OrderService {
     List<OrderItem> saveOrderItems(List<OrderItem> orderItems);
 
     /**
+     * Save order to database (create or update)
+     * @param order Order entity
+     * @return Saved order
+     */
+    Order saveOrder(Order order);
+
+    /**
      * Update order
      * @param order Order entity
      * @return Updated order
      */
     Order updateOrder(Order order);
+
 }

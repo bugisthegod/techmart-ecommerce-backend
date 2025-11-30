@@ -1,13 +1,17 @@
 package com.abel.ecommerce.facade;
 
+import com.abel.ecommerce.consumer.SeckillOrderConsumer;
 import com.abel.ecommerce.dto.request.OrderRequest;
 import com.abel.ecommerce.entity.*;
 import com.abel.ecommerce.exception.*;
 import com.abel.ecommerce.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderFacade {
@@ -34,6 +38,7 @@ public class OrderFacade {
     private final RedissonClient redissonClient;
 
     private final StockService stockService;
+
 
 
     /**
@@ -91,12 +96,13 @@ public class OrderFacade {
                 order.setReceiverAddress(address.getFullAddress());
                 order.setReceiverPhone(address.getReceiverPhone());
                 order.setStatus(Order.STATUS_PENDING_PAYMENT);
-                orderService.updateOrder(order);
+                orderService.saveOrder(order);
                 List<OrderItem> orderItems = selectedCartItems.stream().map(cartItem -> {
                     Product product = productMap.get(cartItem.getProductId());
                     BigDecimal itemAmount = product.getPrice().multiply(new BigDecimal(cartItem.getQuantity()));
                     OrderItem orderItem = new OrderItem();
-                    orderItem.setOrderId(order.getId());
+                    orderItem.setOrderId(order.getId()); // TODO: Test here, can we get a orderId here?
+                    log.info("After saveOrder - Order ID: {}, Order No: {}", order.getId(), order.getOrderNo());
                     orderItem.setOrderNo(newOrderNo);
                     orderItem.setProductId(cartItem.getProductId());
                     orderItem.setProductName(product.getName());

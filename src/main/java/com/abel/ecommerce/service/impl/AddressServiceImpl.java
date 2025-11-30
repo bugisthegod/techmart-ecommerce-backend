@@ -104,8 +104,9 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public Optional<Address> findDefaultAddress(Long userId) {
-        return addressRepository.findByUserIdAndIsDefault(userId, Address.DEFAULT_ADDRESS);
+    public Address findDefaultAddress(Long userId) {
+        return addressRepository.findByUserIdAndIsDefault(userId, Address.DEFAULT_ADDRESS)
+                .orElseThrow(() -> new AddressNotFoundException("Current user doesn't have a default address"));
     }
 
     @Override

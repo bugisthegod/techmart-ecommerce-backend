@@ -1,11 +1,8 @@
 package com.abel.ecommerce.service.impl;
 
-import com.abel.ecommerce.constant.RedisKeyConstants;
 import com.abel.ecommerce.entity.Product;
 import com.abel.ecommerce.entity.SeckillMessage;
 import com.abel.ecommerce.exception.InsufficientStockException;
-import com.abel.ecommerce.exception.ProductNotFoundException;
-import com.abel.ecommerce.init.StockWarmer;
 import com.abel.ecommerce.service.OrderService;
 import com.abel.ecommerce.service.SeckillService;
 import com.abel.ecommerce.service.StockService;
@@ -16,14 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -60,9 +54,9 @@ public class SeckillServiceImpl implements SeckillService {
             seckillMessage.setRoutingKey("seckill.order");
             seckillMessage.setStatus(SeckillMessage.STATUS_PENDING);
             seckillMessage.setNextRetryTime(LocalDateTime.now());
+            seckillMessage.setMessageContent(buildMessageJson(orderNo, userId, productId));
 
             return  seckillMessage;
-
         }
         catch (Exception e) {
             stockService.restoreStock(productId,quantity);

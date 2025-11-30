@@ -51,7 +51,7 @@ public interface AddressService {
      * @param userId User ID
      * @return Optional containing the default address if it exists
      */
-    Optional<Address> findDefaultAddress(Long userId);
+    Address findDefaultAddress(Long userId);
 
     /**
      * Find an address by ID and user ID
