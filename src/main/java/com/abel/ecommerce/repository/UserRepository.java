@@ -27,7 +27,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsernameAndStatus(String username, Integer status);
 
     // Find role codes by username for caching
-    @Query("SELECT r.code FROM User u JOIN u.roles r WHERE u.username = :username AND u.status = 1")
+    @Query("SELECT r.code FROM User u JOIN u.userRoles ur JOIN ur.role r WHERE u.username = :username AND u.status = 1")
     List<String> findRoleCodesByUsername(@Param("username") String username);
 
 }

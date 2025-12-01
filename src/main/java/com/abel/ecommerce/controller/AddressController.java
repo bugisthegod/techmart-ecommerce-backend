@@ -39,7 +39,8 @@ public class AddressController {
             Address address = addressService.createAddress(userId, request);
             AddressResponse response = convertToResponse(address);
             return ResponseResult.ok(response);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error creating address - userId: {}", userId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -55,13 +56,16 @@ public class AddressController {
             Address address = addressService.updateAddress(userId, addressId, request);
             AddressResponse response = convertToResponse(address);
             return ResponseResult.ok(response);
-        } catch (AddressNotFoundException e) {
+        }
+        catch (AddressNotFoundException e) {
             log.error("Address not found for update - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (DefaultAddressException e) {
+        }
+        catch (DefaultAddressException e) {
             log.error("Default address exception during update - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error updating address - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -75,13 +79,16 @@ public class AddressController {
         try {
             addressService.deleteAddress(userId, addressId);
             return ResponseResult.ok("Address deleted successfully");
-        } catch (AddressNotFoundException e) {
+        }
+        catch (AddressNotFoundException e) {
             log.error("Address not found for deletion - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (DefaultAddressException e) {
+        }
+        catch (DefaultAddressException e) {
             log.error("Cannot delete default address - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error deleting address - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -97,7 +104,8 @@ public class AddressController {
                     .map(this::convertToResponse)
                     .collect(Collectors.toList());
             return ResponseResult.ok(responses);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error getting user addresses - userId: {}", userId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -112,10 +120,12 @@ public class AddressController {
             Address address = addressService.findAddressByIdAndUserId(addressId, userId);
             AddressResponse response = convertToResponse(address);
             return ResponseResult.ok(response);
-        } catch (AddressNotFoundException e) {
+        }
+        catch (AddressNotFoundException e) {
             log.error("Address not found - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error getting address by ID - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -126,14 +136,15 @@ public class AddressController {
     public ResponseResult<AddressResponse> getDefaultAddress(
             @Parameter(description = "User ID") @RequestParam Long userId) {
         try {
-            Optional<Address> defaultAddress = addressService.findDefaultAddress(userId);
-            if (defaultAddress.isPresent()) {
-                AddressResponse response = convertToResponse(defaultAddress.get());
-                return ResponseResult.ok(response);
-            } else {
-                return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "No default address found");
-            }
-        } catch (Exception e) {
+            Address defaultAddress = addressService.findDefaultAddress(userId);
+
+            AddressResponse response = convertToResponse(defaultAddress);
+            return ResponseResult.ok(response);
+        }
+        catch (AddressNotFoundException e) {
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "No default address found");
+        }
+        catch (Exception e) {
             return ResponseResult.error(ResultCode.COMMON_FAIL);
         }
     }
@@ -146,10 +157,12 @@ public class AddressController {
         try {
             addressService.setDefaultAddress(userId, addressId);
             return ResponseResult.ok("Default address updated successfully");
-        } catch (AddressNotFoundException e) {
+        }
+        catch (AddressNotFoundException e) {
             log.error("Address not found when setting default - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error setting default address - userId: {}, addressId: {}", userId, addressId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -162,7 +175,8 @@ public class AddressController {
         try {
             long count = addressService.getAddressCount(userId);
             return ResponseResult.ok(count);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Unexpected error getting address count - userId: {}", userId, e);
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
@@ -171,11 +185,11 @@ public class AddressController {
     private AddressResponse convertToResponse(Address address) {
         AddressResponse response = new AddressResponse();
         BeanUtils.copyProperties(address, response);
-        
+
         // Set computed fields
         response.setFullAddress(address.getFullAddress());
         response.setDefaultAddress(address.isDefaultAddress());
-        
+
         return response;
     }
 }

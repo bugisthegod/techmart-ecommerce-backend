@@ -6,6 +6,7 @@ import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.Role;
 import com.abel.ecommerce.entity.User;
+import com.abel.ecommerce.entity.UserRole;
 import com.abel.ecommerce.exception.IncorrectPasswordException;
 import com.abel.ecommerce.exception.RoleNotFoundException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
@@ -53,9 +54,14 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
         user.setStatus(User.ACTIVE_USER); // Active status
 
-        Role customerRole = roleRepository.findByCode("CUSTOMER")
-                .orElseThrow(() -> new RoleNotFoundException("CUSTOMER"));
-        user.getRoles().add(customerRole);
+        Role customerRole = roleRepository.findByCode(Role.ROLE_CUSTOMER)
+                .orElseThrow(() -> new RoleNotFoundException(Role.ROLE_CUSTOMER));
+
+        // Create UserRole relationship
+        UserRole userRole = new UserRole();
+        userRole.setUser(user);
+        userRole.setRole(customerRole);
+        user.getUserRoles().add(userRole);
 
         return userRepository.save(user);
     }
