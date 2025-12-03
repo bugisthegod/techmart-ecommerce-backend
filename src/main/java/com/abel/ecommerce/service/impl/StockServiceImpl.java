@@ -70,13 +70,24 @@ public class StockServiceImpl implements StockService {
         Product product = (Product) objectRedisTemplate.opsForValue().get(infoKey);
 
         if (product == null) {
-            // TODO: One thing is, if redis cannot find product, so go to database check, but also cannot find it. And there are a lot of request
-            //  to database
             Product productFromDB = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id, "ID"));
             objectRedisTemplate.opsForValue().set(infoKey, productFromDB, 1 , TimeUnit.HOURS);
             return productFromDB;
         }
         return product;
+    }
+
+    @Override
+    public void enableProductForSeckill(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId, "ID"));
+
+        String stockKey = RedisKeyConstants.getProductStockKey(productId);
+        String infoKey = RedisKeyConstants.PRODUCT_INFO_PREFIX + productId;
+
+        stringRedisTemplate.opsForValue().set(stockKey, String.valueOf(product.getStock()));
+
+        objectRedisTemplate.opsForValue().set(infoKey, product, 1, TimeUnit.HOURS);
     }
 
 }

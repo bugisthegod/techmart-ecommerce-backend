@@ -12,4 +12,6 @@ public interface StockService {
     public int getStock(Long productId);
 
     public Product findProductById(Long id);
+
+    public void enableProductForSeckill(Long productId);
 }

@@ -40,3 +40,5 @@ replay_pid*
 /src/main/resources/application-local.properties
 /target/classes/application-local.properties
 /.claude/settings.local.json
+**/target/
+**/logs
