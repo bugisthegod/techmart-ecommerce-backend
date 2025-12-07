@@ -47,19 +47,18 @@ public class SeckillController {
     @PostMapping("/{productId}")
     public ResponseResult<String> seckillProduct(
             @PathVariable Long productId,
-            @Parameter(description = "User ID") @RequestParam Long userId,
-            @Parameter(description = "Order data") @Valid @RequestBody OrderRequest request,
-            HttpServletRequest httpRequest) {
+            @Parameter(description = "User ID") @RequestParam Long userId
+            ) {
         try {
             SeckillMessage seckillMessage = seckillService.doSeckill(userId, productId, 1);
-            return ResponseResult.ok(ResultCode.SUCCESS);
+            return ResponseResult.ok("Seckill successful, order is being processed");
         }
         catch (OrderNotFoundException e) {
             log.error("Order cannot be found", e);
             return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
         }
         catch (Exception e) {
-            log.error("Exception: ", e);
+            log.error("Seckill failed for user {} and product {}: {}", userId, productId, e.getMessage());
             return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
         }
     }
