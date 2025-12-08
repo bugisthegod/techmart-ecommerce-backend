@@ -5,11 +5,15 @@ import com.abel.ecommerce.entity.Order;
 import com.abel.ecommerce.entity.OrderItem;
 import com.abel.ecommerce.entity.Product;
 import com.abel.ecommerce.entity.ReliableMessage;
+import com.abel.ecommerce.exception.AddressNotFoundException;
+import com.abel.ecommerce.exception.BaseException;
+import com.abel.ecommerce.exception.ProductNotFoundException;
 import com.abel.ecommerce.repository.ReliableMessageRepository;
 import com.abel.ecommerce.repository.SeckillMessageRepository;
 import com.abel.ecommerce.service.AddressService;
 import com.abel.ecommerce.service.OrderService;
 import com.abel.ecommerce.service.ProductService;
+import com.abel.ecommerce.service.StockService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +46,7 @@ public class SeckillOrderConsumer {
     private final ReliableMessageRepository reliableMessageRepository;
     private final AddressService addressService;
     private final RabbitTemplate rabbitTemplate;
+    private final StockService stockService;
 
 
     // 1 insert reliable message table to know: is it the first time to write
@@ -151,6 +156,7 @@ public class SeckillOrderConsumer {
 
             // Reduce product stock in database (keep in sync with Redis)
             product.setStock(product.getStock() - quantity);
+            product.setSales(product.getSales() + quantity);
             productService.updateProduct(product);
 
             // Step 4: Send payment timeout message (TTL + DLQ)
@@ -171,13 +177,56 @@ public class SeckillOrderConsumer {
                     orderNo, userId, productId, quantity);
 
         }
+        catch (AddressNotFoundException e) {
+            // PERMANENT FAILURE: User has no default address - ACK to discard message
+            log.error("PERMANENT FAILURE - No default address for user {}. Order {} will be DISCARDED. " +
+                    "User needs to add a default address. Error: {}", userId, orderNo, e.getMessage());
+
+            compensateRedisStock(productId, quantity);
+
+            channel.basicAck(deliveryTag, false);  // ACK to remove from queue permanently
+            throw e;  // Rollback transaction to clean up ReliableMessage
+        }
+        catch (ProductNotFoundException e) {
+            // PERMANENT FAILURE: Product doesn't exist - ACK to discard message
+            log.error("PERMANENT FAILURE - Product {} not found for order {}. Message will be DISCARDED. Error: {}",
+                    productId, orderNo, e.getMessage());
+
+            compensateRedisStock(productId, quantity);
+
+            channel.basicAck(deliveryTag, false);  // ACK to remove from queue permanently
+            throw e;  // Rollback transaction to clean up ReliableMessage
+        }
+        catch (BaseException e) {
+            // PERMANENT FAILURE: Business rule violations (409, 400 errors) - ACK to discard
+            log.error("PERMANENT FAILURE - Business rule violation for order {}. Message will be DISCARDED. " +
+                    "Error: {}", orderNo, e.getMessage());
+
+            compensateRedisStock(productId, quantity);
+
+            channel.basicAck(deliveryTag, false);  // ACK to remove from queue permanently
+            throw e;  // Rollback transaction to clean up ReliableMessage
+        }
         catch (Exception e) {
-            // Business logic error - may be transient (DB connection, etc.), requeue for retry
-            log.error("Failed to process seckill order. OrderNo: {}, UserId: {}, ProductId: {}, Quantity: {}. " +
-                    "Message will be requeued.", orderNo, userId, productId, quantity, e);
-            channel.basicNack(deliveryTag, false, true);  // Requeue for retry
+            // TRANSIENT FAILURE: Infrastructure errors (DB connection, timeout, etc.) - REQUEUE
+            log.error("TRANSIENT FAILURE - Failed to process order {}. Message will be REQUEUED for retry. " +
+                            "OrderNo: {}, UserId: {}, ProductId: {}, Quantity: {}, DeliveryTag: {}",
+                    orderNo, orderNo, userId, productId, quantity, deliveryTag, e);
+            channel.basicNack(deliveryTag, false, true);  // NACK with requeue=true
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Compensate Redis stock when order creation fails permanently.
+     * This ensures Redis and database stock remain consistent.
+     *
+     * @param productId The product ID
+     * @param quantity  The quantity to restore
+     */
+    private void compensateRedisStock(Long productId, Integer quantity) {
+        log.info("Compensating Redis stock for product {}: restoring {} units", productId, quantity);
+        stockService.restoreStock(productId, quantity);
     }
 
 }

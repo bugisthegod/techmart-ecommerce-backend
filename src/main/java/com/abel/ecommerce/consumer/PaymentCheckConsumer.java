@@ -65,6 +65,7 @@ public class PaymentCheckConsumer {
                     // Restore database stock
                     Product product = productService.findProductById(orderItem.getProductId());
                     product.setStock(product.getStock() + orderItem.getQuantity());
+                    product.setSales(product.getSales() - orderItem.getQuantity());
                     productService.updateProduct(product);
 
                     log.info("Restored stock for product {}: {} units", orderItem.getProductId(), orderItem.getQuantity());
