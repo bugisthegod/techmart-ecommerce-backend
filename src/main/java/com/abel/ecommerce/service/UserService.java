@@ -20,7 +20,7 @@ public interface UserService {
      * @return Login response with token and user info
      * @throws Exception if login fails
      */
-    LoginResponse login(UserLoginRequest request) throws Exception;
+    LoginResponse login(UserLoginRequest request);
 
     /**
      * Find user by username

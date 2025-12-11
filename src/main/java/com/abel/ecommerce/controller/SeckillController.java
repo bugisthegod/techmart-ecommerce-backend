@@ -49,32 +49,16 @@ public class SeckillController {
             @PathVariable Long productId,
             @Parameter(description = "User ID") @RequestParam Long userId
             ) {
-        try {
-            SeckillMessage seckillMessage = seckillService.doSeckill(userId, productId, 1);
-            return ResponseResult.ok("Seckill successful, order is being processed");
-        }
-        catch (OrderNotFoundException e) {
-            log.error("Order cannot be found", e);
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Seckill failed for user {} and product {}: {}", userId, productId, e.getMessage());
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        SeckillMessage seckillMessage = seckillService.doSeckill(userId, productId, 1);
+        return ResponseResult.ok("Seckill successful, order is being processed");
     }
 
     @Operation(summary = "Enable product for seckill", description = "Store product info and stock in Redis for seckill")
     @PostMapping("/enable/{productId}")
     public ResponseResult<String> enableProductForSeckill(@PathVariable Long productId) {
-        try {
-            stockService.enableProductForSeckill(productId);
-            log.info("Product {} enabled for seckill", productId);
-            return ResponseResult.ok("Product enabled for seckill successfully");
-        }
-        catch (Exception e) {
-            log.error("Failed to enable product for seckill: ", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        stockService.enableProductForSeckill(productId);
+        log.info("Product {} enabled for seckill", productId);
+        return ResponseResult.ok("Product enabled for seckill successfully");
     }
 
 }

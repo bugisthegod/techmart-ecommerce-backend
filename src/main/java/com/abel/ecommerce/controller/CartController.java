@@ -4,14 +4,11 @@ import com.abel.ecommerce.dto.request.CartItemRequest;
 import com.abel.ecommerce.dto.response.CartItemResponse;
 import com.abel.ecommerce.dto.response.CartResponse;
 import com.abel.ecommerce.entity.CartItem;
-import com.abel.ecommerce.exception.CartItemNotFoundException;
-import com.abel.ecommerce.exception.InsufficientStockException;
 import com.abel.ecommerce.exception.ProductNotFoundException;
 import com.abel.ecommerce.service.CartService;
 import com.abel.ecommerce.service.ProductService;
 import com.abel.ecommerce.entity.Product;
 import com.abel.ecommerce.utils.ResponseResult;
-import com.abel.ecommerce.utils.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -41,24 +37,10 @@ public class CartController {
     public ResponseResult<CartResponse> addToCart(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item data") @Valid @RequestBody CartItemRequest request) {
-        try {
-            cartService.addToCart(userId, request);
-            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
-            CartResponse response = convertToCartResponse(userId, cartItems);
-            return ResponseResult.ok(response);
-        }
-        catch (ProductNotFoundException e) {
-            log.error("Product not found when adding to cart - userId: {}, productId: {}", userId, request.getProductId(), e);
-            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (InsufficientStockException e) {
-            log.error("Insufficient stock when adding to cart - userId: {}, productId: {}, quantity: {}", userId, request.getProductId(), request.getQuantity(), e);
-            return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error adding to cart - userId: {}", userId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        cartService.addToCart(userId, request);
+        List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+        CartResponse response = convertToCartResponse(userId, cartItems);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Update cart item quantity")
@@ -67,24 +49,10 @@ public class CartController {
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
             @Parameter(description = "Cart item quantity") @RequestParam Integer quantity) {
-        try {
-            cartService.updateCartItem(userId, cartItemId, quantity);
-            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
-            CartResponse response = convertToCartResponse(userId, cartItems);
-            return ResponseResult.ok(response);
-        }
-        catch (CartItemNotFoundException e) {
-            log.error("Cart item not found for update - userId: {}, cartItemId: {}", userId, cartItemId, e);
-            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (InsufficientStockException e) {
-            log.error("Insufficient stock when updating cart item - userId: {}, cartItemId: {}, quantity: {}", userId, cartItemId, quantity, e);
-            return ResponseResult.error(ResultCode.PRODUCT_OUT_OF_STOCK.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error updating cart item - userId: {}, cartItemId: {}", userId, cartItemId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        cartService.updateCartItem(userId, cartItemId, quantity);
+        List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+        CartResponse response = convertToCartResponse(userId, cartItems);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Remove item from cart")
@@ -92,49 +60,27 @@ public class CartController {
     public ResponseResult<CartResponse> removeFromCart(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId) {
-        try {
-            cartService.removeFromCart(userId, cartItemId);
-            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
-            CartResponse response = convertToCartResponse(userId, cartItems);
-            return ResponseResult.ok(response);
-        }
-        catch (CartItemNotFoundException e) {
-            log.error("Cart item not found for removal - userId: {}, cartItemId: {}", userId, cartItemId, e);
-            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error removing from cart - userId: {}, cartItemId: {}", userId, cartItemId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        cartService.removeFromCart(userId, cartItemId);
+        List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+        CartResponse response = convertToCartResponse(userId, cartItems);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Get user cart")
     @GetMapping
     public ResponseResult<CartResponse> getCart(
             @Parameter(description = "User ID") @RequestParam Long userId) {
-        try {
-            List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
-            CartResponse cartResponse = convertToCartResponse(userId, cartItems);
-            return ResponseResult.ok(cartResponse);
-        }
-        catch (Exception e) {
-            log.error("Unexpected error getting cart - userId: {}", userId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        List<CartItem> cartItems = cartService.getCartItemsByUserId(userId);
+        CartResponse cartResponse = convertToCartResponse(userId, cartItems);
+        return ResponseResult.ok(cartResponse);
     }
 
     @Operation(summary = "Clear user cart")
     @DeleteMapping("/clear")
     public ResponseResult<String> clearCart(
             @Parameter(description = "User ID") @RequestParam Long userId) {
-        try {
-            cartService.clearCart(userId);
-            return ResponseResult.ok("Cart cleared successfully");
-        }
-        catch (Exception e) {
-            log.error("Unexpected error clearing cart - userId: {}", userId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        cartService.clearCart(userId);
+        return ResponseResult.ok("Cart cleared successfully");
     }
 
     @Operation(summary = "Update item selection status")
@@ -143,18 +89,8 @@ public class CartController {
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
             @Parameter(description = "Selection status (0 or 1)") @RequestParam Integer selected) {
-        try {
-            cartService.updateItemSelection(userId, cartItemId, selected);
-            return ResponseResult.ok("Selection status updated successfully");
-        }
-        catch (CartItemNotFoundException e) {
-            log.error("Cart item not found for removal - userId: {}, cartItemId: {}", userId, cartItemId, e);
-            return ResponseResult.error(ResultCode.CART_ITEM_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error removing from cart - userId: {}, cartItemId: {}", userId, cartItemId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        cartService.updateItemSelection(userId, cartItemId, selected);
+        return ResponseResult.ok("Selection status updated successfully");
     }
 
     /**

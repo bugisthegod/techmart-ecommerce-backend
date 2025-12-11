@@ -34,126 +34,70 @@ public class CategoryController {
     @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SUPER_ADMIN')")
     @PostMapping
     public ResponseResult<CategoryResponse> createCategory(
-            @Parameter(description = "Category creation data") 
+            @Parameter(description = "Category creation data")
             @Valid @RequestBody CategoryRequest request) {
-        try {
-            Category category = categoryService.createCategory(request);
-            CategoryResponse response = convertToResponse(category);
-            return ResponseResult.ok(response);
-        } catch (CategoryAlreadyExistsException e) {
-            log.error("Category already exists: {}", e.getMessage(), e);
-            return ResponseResult.error(ResultCode.CATEGORY_ALREADY_EXIST.getCode(), e.getMessage());
-        } catch (CategoryNotFoundException e) {
-            log.error("Parent category not found when creating category: {}", e.getMessage(), e);
-            return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected error creating category", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Category category = categoryService.createCategory(request);
+        CategoryResponse response = convertToResponse(category);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Update category", description = "Update an existing category")
     @PutMapping("/{id}")
     public ResponseResult<CategoryResponse> updateCategory(
             @Parameter(description = "Category ID") @PathVariable Long id,
-            @Parameter(description = "Category update data") 
+            @Parameter(description = "Category update data")
             @Valid @RequestBody CategoryRequest request) {
-        try {
-            Category category = categoryService.updateCategory(id, request);
-            CategoryResponse response = convertToResponse(category);
-            return ResponseResult.ok(response);
-        } catch (CategoryNotFoundException e) {
-            log.error("Category not found for update - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
-        } catch (CategoryAlreadyExistsException e) {
-            log.error("Category name already exists during update - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.CATEGORY_ALREADY_EXIST.getCode(), e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected error updating category - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Category category = categoryService.updateCategory(id, request);
+        CategoryResponse response = convertToResponse(category);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Delete category", description = "Delete a category by ID")
     @DeleteMapping("/{id}")
     public ResponseResult<String> deleteCategory(
             @Parameter(description = "Category ID") @PathVariable Long id) {
-        try {
-            categoryService.deleteCategory(id);
-            return ResponseResult.ok("Category deleted successfully");
-        } catch (CategoryNotFoundException e) {
-            log.error("Category not found for deletion - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
-        } catch (RuntimeException e) {
-            log.error("Runtime error deleting category - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected error deleting category - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        categoryService.deleteCategory(id);
+        return ResponseResult.ok("Category deleted successfully");
     }
 
     @Operation(summary = "Get category by ID", description = "Retrieve category details by ID")
     @GetMapping("/{id}")
     public ResponseResult<CategoryResponse> getCategoryById(
             @Parameter(description = "Category ID") @PathVariable Long id) {
-        try {
-            Category category = categoryService.findCategoryById(id);
-            CategoryResponse response = convertToResponse(category);
-            return ResponseResult.ok(response);
-        } catch (CategoryNotFoundException e) {
-            log.error("Category not found - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.CATEGORY_NOT_EXIST.getCode(), e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected error getting category - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Category category = categoryService.findCategoryById(id);
+        CategoryResponse response = convertToResponse(category);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Get all categories", description = "Retrieve all active categories")
     @GetMapping
     public ResponseResult<List<CategoryResponse>> getAllCategories() {
-        try {
-            List<Category> categories = categoryService.findAllCategories();
-            List<CategoryResponse> responses = categories.stream()
+        List<Category> categories = categoryService.findAllCategories();
+        List<CategoryResponse> responses = categories.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
-            return ResponseResult.ok(responses);
-        } catch (Exception e) {
-            log.error("Unexpected error getting all categories", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        return ResponseResult.ok(responses);
     }
 
     @Operation(summary = "Get top level categories", description = "Retrieve top level categories (parentId = 0)")
     @GetMapping("/top-level")
     public ResponseResult<List<CategoryResponse>> getTopLevelCategories() {
-        try {
-            List<Category> categories = categoryService.findTopLevelCategories();
-            List<CategoryResponse> responses = categories.stream()
+        List<Category> categories = categoryService.findTopLevelCategories();
+        List<CategoryResponse> responses = categories.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
-            return ResponseResult.ok(responses);
-        } catch (Exception e) {
-            log.error("Unexpected error getting all categories", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        return ResponseResult.ok(responses);
     }
 
     @Operation(summary = "Get subcategories", description = "Retrieve subcategories by parent category ID")
     @GetMapping("/{parentId}/subcategories")
     public ResponseResult<List<CategoryResponse>> getSubcategories(
             @Parameter(description = "Parent category ID") @PathVariable Long parentId) {
-        try {
-            List<Category> categories = categoryService.findSubcategories(parentId);
-            List<CategoryResponse> responses = categories.stream()
+        List<Category> categories = categoryService.findSubcategories(parentId);
+        List<CategoryResponse> responses = categories.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
-            return ResponseResult.ok(responses);
-        } catch (Exception e) {
-            log.error("Unexpected error getting all categories", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        return ResponseResult.ok(responses);
     }
 
     private CategoryResponse convertToResponse(Category category) {

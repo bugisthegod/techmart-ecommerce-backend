@@ -3,7 +3,6 @@ package com.abel.ecommerce.controller;
 import com.abel.ecommerce.dto.request.ProductRequest;
 import com.abel.ecommerce.dto.response.ProductResponse;
 import com.abel.ecommerce.entity.Product;
-import com.abel.ecommerce.exception.ProductNotFoundException;
 import com.abel.ecommerce.service.ProductService;
 import com.abel.ecommerce.utils.ResponseResult;
 import com.abel.ecommerce.utils.ResultCode;
@@ -45,71 +44,33 @@ public class ProductController {
     @PreAuthorize("hasRole('PRODUCT_ADMIN') or hasRole('SUPER_ADMIN')")
     @PostMapping("/createProduct")
     public ResponseResult<String> createProduct(@Valid @RequestBody ProductRequest request) {
-        try {
-
-            Product product = productService.createProduct(request);
-            return ResponseResult.ok("Product created successfully with ID: " + product.getId());
-        }
-        catch (Exception e) {
-            log.error("Failed to create product", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Product product = productService.createProduct(request);
+        return ResponseResult.ok("Product created successfully with ID: " + product.getId());
     }
 
     @Operation(summary = "Update the product")
     @PutMapping("/{id}")
     public ResponseResult<ProductResponse> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
-
-        try {
-            Product product = productService.updateProduct(request, id);
-            ProductResponse productResponse = new ProductResponse();
-            BeanUtils.copyProperties(product, productResponse);
-            return ResponseResult.ok(productResponse);
-        }
-        catch (ProductNotFoundException e) {
-            log.error("Product not found for update - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error updating product with ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Product product = productService.updateProduct(request, id);
+        ProductResponse productResponse = new ProductResponse();
+        BeanUtils.copyProperties(product, productResponse);
+        return ResponseResult.ok(productResponse);
     }
 
     @Operation(summary = "Delete the product by ID")
     @DeleteMapping("/{id}")
     public ResponseResult<String> deleteProduct(@PathVariable Long id) {
-        try {
-            productService.deleteProduct(id);
-            return ResponseResult.ok(ResultCode.SUCCESS);
-        }
-        catch (ProductNotFoundException e) {
-            log.error("Product not found for deletion - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error deleting product with ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        productService.deleteProduct(id);
+        return ResponseResult.ok(ResultCode.SUCCESS);
     }
 
     @Operation(summary = "Find product by ID")
     @GetMapping("/{id}")
     public ResponseResult<ProductResponse> findProductById(@PathVariable Long id) {
-        try {
-            Product productById = productService.findProductById(id);
-            ProductResponse productResponse = new ProductResponse();
-            BeanUtils.copyProperties(productById, productResponse);
-            return ResponseResult.ok(productResponse);
-        }
-        catch (ProductNotFoundException e) {
-            log.error("Product not found - ID: {}", id, e);
-            return ResponseResult.error(ResultCode.PRODUCT_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error finding product with ID: {}", id, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Product productById = productService.findProductById(id);
+        ProductResponse productResponse = new ProductResponse();
+        BeanUtils.copyProperties(productById, productResponse);
+        return ResponseResult.ok(productResponse);
     }
 
     @Operation(summary = "Find products with pagination")
@@ -120,48 +81,31 @@ public class ProductController {
                                                                             @RequestParam(defaultValue = "10") int size,
                                                                             @RequestParam(defaultValue = "createdAt") String sortBy,
                                                                             @RequestParam(defaultValue = "desc") String sortDir) {
-        try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-            Page<Product> productsWithPagination = productService.findProductsWithPagination(categoryId, status, pageable);
-            Page<ProductResponse> productResponses = productsWithPagination.map(product -> {
-                ProductResponse response = new ProductResponse();
-                BeanUtils.copyProperties(product, response);
-                return response;
-            });
-            return ResponseResult.ok(productResponses);
-        }
-        catch (RuntimeException e) {
-            log.error("Runtime error finding products with pagination - categoryId: {}, status: {}, page: {}", categoryId, status, page, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error finding products with pagination - categoryId: {}, status: {}, page: {}", categoryId, status, page, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+        Page<Product> productsWithPagination = productService.findProductsWithPagination(categoryId, status, pageable);
+        Page<ProductResponse> productResponses = productsWithPagination.map(product -> {
+            ProductResponse response = new ProductResponse();
+            BeanUtils.copyProperties(product, response);
+            return response;
+        });
+        return ResponseResult.ok(productResponses);
     }
 
     @Operation(summary = "Search products by Name")
     @GetMapping("/search")
-    public ResponseResult<List<ProductResponse>> searchProducts(@PathVariable String name) {
-        try {
-            List<Product> products = productService.searchProducts(name);
-            List<ProductResponse> productResponses = new ArrayList<>();
-            if (products != null && !products.isEmpty() && products.stream().noneMatch(Objects::isNull)) {
-                for (Product product : products) {
-                    ProductResponse productResponse = new ProductResponse();
-                    BeanUtils.copyProperties(product, productResponse);
-                    productResponses.add(productResponse);
-                }
-                return ResponseResult.ok(productResponses);
+    public ResponseResult<List<ProductResponse>> searchProducts(@RequestParam String name) {
+        List<Product> products = productService.searchProducts(name);
+        List<ProductResponse> productResponses = new ArrayList<>();
+        if (products != null && !products.isEmpty() && products.stream().noneMatch(Objects::isNull)) {
+            for (Product product : products) {
+                ProductResponse productResponse = new ProductResponse();
+                BeanUtils.copyProperties(product, productResponse);
+                productResponses.add(productResponse);
             }
-            else {
-                return ResponseResult.ok(ResultCode.SUCCESS);
-            }
-
+            return ResponseResult.ok(productResponses);
         }
-        catch (Exception e) {
-            log.error("Failed to search products by name: {}", name, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
+        else {
+            return ResponseResult.ok(ResultCode.SUCCESS);
         }
     }
 

@@ -46,32 +46,22 @@ public class OrderController {
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order data") @Valid @RequestBody OrderRequest request,
             HttpServletRequest httpRequest) {
-        try {
 
-            // 1. Get order idempotency token from request header
-            String orderToken = httpRequest.getHeader("Idempotency-Token");
-            if (StringUtils.isEmpty(orderToken)) return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Missing idempotency token");
+        // 1. Get order idempotency token from request header
+        String orderToken = httpRequest.getHeader("Idempotency-Token");
+        if (StringUtils.isEmpty(orderToken)) return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Missing idempotency token");
 
-            // 2. Validate if idempotency token exists
-            if (!orderService.validateAndDeleteOrderToken(orderToken))
-                return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Order already submitted " +
-                        "or invalid token");
+        // 2. Validate if idempotency token exists
+        if (!orderService.validateAndDeleteOrderToken(orderToken))
+            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Order already submitted " +
+                    "or invalid token");
 
-            // 3. Use facade for complex business logic
-            Order order = orderFacade.createOrder(userId, request);
+        // 3. Use facade for complex business logic
+        Order order = orderFacade.createOrder(userId, request);
 
-            // Convert to response DTO in controller
-            OrderResponse response = convertToOrderResponse(order);
-            return ResponseResult.ok(response);
-        }
-        catch (OrderNotFoundException e) {
-            log.error("Order cannot be found", e);
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Exception: ", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        // Convert to response DTO in controller
+        OrderResponse response = convertToOrderResponse(order);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Get user orders", description = "Get paginated list of user's orders")
@@ -81,26 +71,20 @@ public class OrderController {
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Order status filter") @RequestParam(required = false) Integer status) {
-        try {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Order> orders;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders;
 
-            // Get entities from service
-            if (status != null) {
-                orders = orderService.findOrdersByUserIdAndStatus(userId, status, pageable);
-            }
-            else {
-                orders = orderService.findOrdersByUserId(userId, pageable);
-            }
+        // Get entities from service
+        if (status != null) {
+            orders = orderService.findOrdersByUserIdAndStatus(userId, status, pageable);
+        }
+        else {
+            orders = orderService.findOrdersByUserId(userId, pageable);
+        }
 
-            // Convert to response DTOs in controller
-            Page<OrderResponse> orderResponses = orders.map(this::convertToOrderResponse);
-            return ResponseResult.ok(orderResponses);
-        }
-        catch (Exception e) {
-            log.error("Unexpected error getting user orders - userId: {}", userId, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        // Convert to response DTOs in controller
+        Page<OrderResponse> orderResponses = orders.map(this::convertToOrderResponse);
+        return ResponseResult.ok(orderResponses);
     }
 
     @Operation(summary = "Get order by ID", description = "Get specific order details")
@@ -108,57 +92,36 @@ public class OrderController {
     public ResponseResult<OrderResponse> getOrderById(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
-        try {
-            // Get entity from service
-            Order order = orderService.findOrderByIdAndUserId(orderId, userId);
+        // Get entity from service
+        Order order = orderService.findOrderByIdAndUserId(orderId, userId);
 
-            // Convert to response DTO
-            OrderResponse response = convertToOrderResponse(order);
-            return ResponseResult.ok(response);
-        }
-        catch (OrderNotFoundException e) {
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
-        }
+        // Convert to response DTO
+        OrderResponse response = convertToOrderResponse(order);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Get order by order number", description = "Get order details by order number")
     @GetMapping("/orderNo/{orderNo}")
     public ResponseResult<OrderResponse> getOrderByOrderNo(
             @Parameter(description = "Order number") @PathVariable String orderNo) {
-        try {
-            // Get entity from service
-            Order order = orderService.findOrderByOrderNo(orderNo);
+        // Get entity from service
+        Order order = orderService.findOrderByOrderNo(orderNo);
 
-            // Convert to response DTO
-            OrderResponse response = convertToOrderResponse(order);
-            return ResponseResult.ok(response);
-        }
-        catch (OrderNotFoundException e) {
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
-        }
+        // Convert to response DTO
+        OrderResponse response = convertToOrderResponse(order);
+        return ResponseResult.ok(response);
     }
 
     @Operation(summary = "Get order items", description = "Get all items in an order")
     @GetMapping("/{orderId}/items")
     public ResponseResult<List<OrderItemResponse>> getOrderItems(
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
-        try {
-            // Get entities from service
-            List<OrderItem> items = orderService.findOrderItems(orderId);
+        // Get entities from service
+        List<OrderItem> items = orderService.findOrderItems(orderId);
 
-            // Convert to response DTOs
-            List<OrderItemResponse> responses = convertToOrderItemResponses(items);
-            return ResponseResult.ok(responses);
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
-        }
+        // Convert to response DTOs
+        List<OrderItemResponse> responses = convertToOrderItemResponses(items);
+        return ResponseResult.ok(responses);
     }
 
     @Operation(summary = "Pay order", description = "Process payment for an order")
@@ -166,20 +129,9 @@ public class OrderController {
     public ResponseResult<String> payOrder(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
-        try {
-            // Service returns entity
-            Order paidOrder = orderService.payOrder(userId, orderId);
-            return ResponseResult.ok("Order payment processed successfully. Order No: " + paidOrder.getOrderNo());
-        }
-        catch (OrderNotFoundException e) {
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (OrderStatusException e) {
-            return ResponseResult.error(ResultCode.ORDER_STATUS_ERROR.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        // Service returns entity
+        Order paidOrder = orderService.payOrder(userId, orderId);
+        return ResponseResult.ok("Order payment processed successfully. Order No: " + paidOrder.getOrderNo());
     }
 
     @Operation(summary = "Cancel order", description = "Cancel an order")
@@ -187,20 +139,9 @@ public class OrderController {
     public ResponseResult<String> cancelOrder(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
-        try {
-            // Use facade for complex business logic (restore stock)
-            orderFacade.cancelOrder(userId, orderId);
-            return ResponseResult.ok("Order cancelled successfully");
-        }
-        catch (OrderNotFoundException e) {
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (OrderStatusException e) {
-            return ResponseResult.error(ResultCode.ORDER_CANNOT_CANCEL.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        // Use facade for complex business logic (restore stock)
+        orderFacade.cancelOrder(userId, orderId);
+        return ResponseResult.ok("Order cancelled successfully");
     }
 
     @Operation(summary = "Ship order", description = "Mark order as shipped (Admin only)")
@@ -208,20 +149,9 @@ public class OrderController {
     @PutMapping("/{orderId}/ship")
     public ResponseResult<String> shipOrder(
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
-        try {
-            // Service returns entity
-            Order shippedOrder = orderService.shipOrder(orderId);
-            return ResponseResult.ok("Order shipped successfully. Order No: " + shippedOrder.getOrderNo());
-        }
-        catch (OrderNotFoundException e) {
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (OrderStatusException e) {
-            return ResponseResult.error(ResultCode.ORDER_STATUS_ERROR.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        // Service returns entity
+        Order shippedOrder = orderService.shipOrder(orderId);
+        return ResponseResult.ok("Order shipped successfully. Order No: " + shippedOrder.getOrderNo());
     }
 
     @Operation(summary = "Complete order", description = "Mark order as completed")
@@ -229,20 +159,9 @@ public class OrderController {
     public ResponseResult<String> completeOrder(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
-        try {
-            // Service returns entity
-            Order completedOrder = orderService.completeOrder(userId, orderId);
-            return ResponseResult.ok("Order completed successfully. Order No: " + completedOrder.getOrderNo());
-        }
-        catch (OrderNotFoundException e) {
-            return ResponseResult.error(ResultCode.ORDER_NOT_EXIST.getCode(), e.getMessage());
-        }
-        catch (OrderStatusException e) {
-            return ResponseResult.error(ResultCode.ORDER_STATUS_ERROR.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        // Service returns entity
+        Order completedOrder = orderService.completeOrder(userId, orderId);
+        return ResponseResult.ok("Order completed successfully. Order No: " + completedOrder.getOrderNo());
     }
 
     @Operation(summary = "Get order count", description = "Get total order count for user")
@@ -250,31 +169,21 @@ public class OrderController {
     public ResponseResult<Long> getOrderCount(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order status filter") @RequestParam(required = false) Integer status) {
-        try {
-            long count;
-            if (status != null) {
-                count = orderService.countOrdersByUserIdAndStatus(userId, status);
-            }
-            else {
-                count = orderService.countOrdersByUserId(userId);
-            }
-            return ResponseResult.ok(count);
+        long count;
+        if (status != null) {
+            count = orderService.countOrdersByUserIdAndStatus(userId, status);
         }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
+        else {
+            count = orderService.countOrdersByUserId(userId);
         }
+        return ResponseResult.ok(count);
     }
 
     @Operation(summary = "Generate token for creating order")
     @PostMapping("/generateOrderToken")
     public ResponseResult<String> getOrderToken(@Parameter(description = "User ID") @RequestParam Long userId) {
-        try {
-            String orderToken = orderService.generateOrderToken(userId);
-            return ResponseResult.ok(orderToken);
-        }
-        catch (Exception e) {
-            return ResponseResult.error(ResultCode.COMMON_FAIL);
-        }
+        String orderToken = orderService.generateOrderToken(userId);
+        return ResponseResult.ok(orderToken);
     }
 
     // ============= Helper methods for DTO conversion (in Controller layer) =============

@@ -67,12 +67,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginResponse login(UserLoginRequest request) throws Exception {
+    public LoginResponse login(UserLoginRequest request) {
         User user = findByUsername(request.getUsername());
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new IncorrectPasswordException(user.getUsername());
         }
-        String token = JwtTokenUtil.generateToken(user.getUsername());
+
+        String token;
+        try {
+            token = JwtTokenUtil.generateToken(user.getUsername());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate token", e);
+        }
 
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setToken(token);

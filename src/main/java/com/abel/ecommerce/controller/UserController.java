@@ -5,9 +5,6 @@ import com.abel.ecommerce.dto.request.UserRegisterRequest;
 import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.User;
-import com.abel.ecommerce.exception.IncorrectPasswordException;
-import com.abel.ecommerce.exception.UserAlreadyExistsException;
-import com.abel.ecommerce.exception.UserNotFoundException;
 import com.abel.ecommerce.service.UserService;
 import com.abel.ecommerce.utils.ResponseResult;
 import com.abel.ecommerce.utils.ResultCode;
@@ -44,54 +41,24 @@ public class UserController {
     })
     @PostMapping("/register")
     public ResponseResult<String> register(@Valid @RequestBody UserRegisterRequest request) {
-        try {
-            User user = userService.register(request);
-            return ResponseResult.ok("User registered successfully with ID: " + user.getId());
-        }
-        catch (UserAlreadyExistsException e) {
-            log.error("User registration failed - user already exists: {}", e.getMessage(), e);
-            return ResponseResult.error(e.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error during user registration", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        User user = userService.register(request);
+        return ResponseResult.ok("User registered successfully with ID: " + user.getId());
     }
 
     @Operation(summary = "Find user by username")
     @GetMapping("/{username}")
     public ResponseResult<UserResponse> findUserByUsername(@PathVariable String username) {
-        try {
-            User user = userService.findByUsername(username);
-            UserResponse userResponse = new UserResponse();
-            BeanUtils.copyProperties(user, userResponse);
-            return ResponseResult.ok(userResponse);
-        }
-        catch (UserNotFoundException e) {
-            log.error("User not found: {}", e.getMessage(), e);
-            return ResponseResult.error(e.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error when finding user by username: {}", username, e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        User user = userService.findByUsername(username);
+        UserResponse userResponse = new UserResponse();
+        BeanUtils.copyProperties(user, userResponse);
+        return ResponseResult.ok(userResponse);
     }
 
     @Operation(summary = "User login", description = "Authenticate user and return JWT token")
     @PostMapping("/login")
     public ResponseResult<LoginResponse> login(@Valid @RequestBody UserLoginRequest request) {
-        try {
-            LoginResponse loginResponse = userService.login(request);
-            return ResponseResult.ok(loginResponse);
-        }
-        catch (UserNotFoundException | IncorrectPasswordException e) {
-            log.error("Login failed: {}", e.getMessage(), e);
-            return ResponseResult.error(e.getCode(), e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unexpected error during login", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), e.getMessage());
-        }
+        LoginResponse loginResponse = userService.login(request);
+        return ResponseResult.ok(loginResponse);
     }
 
     @Operation(summary = "User logout", description = "Invalidate JWT token and logout user")
@@ -102,32 +69,18 @@ public class UserController {
     })
     @PostMapping("/logout")
     public ResponseResult<String> logout(@RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            // Validate Authorization header format
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return ResponseResult.error(ResultCode.UNAUTHORIZED.getCode(), "Invalid Authorization header format");
-            }
+        // Validate Authorization header format
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseResult.error(ResultCode.UNAUTHORIZED.getCode(), "Invalid Authorization header format");
+        }
 
-            // Extract token from Authorization header
-            String token = authorizationHeader.substring(7);
+        // Extract token from Authorization header
+        String token = authorizationHeader.substring(7);
 
-            // Call service to logout (blacklist token)
-            userService.logout(token);
+        // Call service to logout (blacklist token)
+        userService.logout(token);
 
-            return ResponseResult.ok("User logged out successfully");
-        }
-        catch (IllegalArgumentException e) {
-            log.error("Logout failed - invalid token: {}", e.getMessage(), e);
-            return ResponseResult.error(ResultCode.PARAM_NOT_VALID.getCode(), e.getMessage());
-        }
-        catch (RuntimeException e) {
-            log.error("Logout failed - token validation error: {}", e.getMessage(), e);
-            return ResponseResult.error(ResultCode.UNAUTHORIZED.getCode(), "Invalid token");
-        }
-        catch (Exception e) {
-            log.error("Unexpected error during logout", e);
-            return ResponseResult.error(ResultCode.COMMON_FAIL.getCode(), "Logout failed");
-        }
+        return ResponseResult.ok("User logged out successfully");
     }
 
     @Operation(summary = "A test api", description = "Test UserController")
