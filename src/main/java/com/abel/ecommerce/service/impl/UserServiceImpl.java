@@ -38,12 +38,12 @@ public class UserServiceImpl implements UserService {
 
         // Check if username already exists
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw UserAlreadyExistsException.username(request.getUsername());
+            throw new UserAlreadyExistsException("Username already exists: " + request.getUsername());
         }
 
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw UserAlreadyExistsException.email(request.getEmail());
+            throw new UserAlreadyExistsException("Email already exists: " + request.getEmail());
         }
 
         // Create user

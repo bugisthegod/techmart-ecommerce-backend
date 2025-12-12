@@ -8,6 +8,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import java.util.Date;
+import java.util.List;
 
 public class JwtTokenUtil {
     /**
@@ -50,12 +51,12 @@ public class JwtTokenUtil {
      * @throws JWTDecodeException If token decoding fails
      */
     public static String getUsernameFromToken(String token) {
-        try {
-            String username = JWT.decode(token).getAudience().get(0);
-            return username;
-        } catch (JWTDecodeException e) {
-            throw new JWTDecodeException("Invalid token format");
-        }
+            DecodedJWT decode = JWT.decode(token);
+            List<String> audience = decode.getAudience();
+            if (audience == null || audience.isEmpty()){
+                throw new JWTDecodeException("Invalid token format");
+            }
+            return audience.get(0);
     }
 
     /**

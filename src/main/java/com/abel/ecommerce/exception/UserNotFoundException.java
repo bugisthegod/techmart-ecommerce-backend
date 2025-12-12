@@ -1,5 +1,7 @@
 package com.abel.ecommerce.exception;
 
+import com.abel.ecommerce.utils.ResultCode;
+
 public class UserNotFoundException extends BaseException {
 
     public UserNotFoundException(String message) {

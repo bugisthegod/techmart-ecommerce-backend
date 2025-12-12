@@ -67,7 +67,7 @@ public class AddressServiceImpl implements AddressService {
         boolean wasDefault = address.isDefaultAddress();
 
         // If this address is the last address
-        if (getAddressCount(userId) <= 1) throw DefaultAddressException.cannotDeleteLastAddress();
+        if (getAddressCount(userId) <= 1) throw new DefaultAddressException("Cannot delete the last remaining address");
 
         // Delete this address at first, because remainingAddresses will contain the delete one
         addressRepository.deleteById(addressId);

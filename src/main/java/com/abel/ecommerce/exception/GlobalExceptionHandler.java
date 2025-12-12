@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -81,6 +82,23 @@ public class GlobalExceptionHandler {
                 e.getValue(),
                 e.getName(),
                 e.getRequiredType().getSimpleName());
+
+        ResponseResult result = ResponseResult.error(
+                ResultCode.PARAM_NOT_VALID.getCode(),
+                message
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
+    /**
+     * Handle missing request header exception
+     */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ResponseResult> handleMissingRequestHeader(MissingRequestHeaderException e) {
+        log.warn("Missing request header: {}", e.getHeaderName());
+
+        String message = "Missing required header: " + e.getHeaderName();
 
         ResponseResult result = ResponseResult.error(
                 ResultCode.PARAM_NOT_VALID.getCode(),
@@ -203,7 +221,7 @@ public class GlobalExceptionHandler {
         log.warn("User already exists: {}", e.getMessage());
 
         ResponseResult result = ResponseResult.error(
-                e.getCode(),
+                ResultCode.USER_ACCOUNT_ALREADY_EXIST.getCode(),
                 e.getMessage()
         );
 
@@ -218,7 +236,7 @@ public class GlobalExceptionHandler {
         log.warn("User not found: {}", e.getMessage());
 
         ResponseResult result = ResponseResult.error(
-                e.getCode(),
+                ResultCode.USER_ACCOUNT_NOT_EXIST.getCode(),
                 e.getMessage()
         );
 
@@ -233,7 +251,7 @@ public class GlobalExceptionHandler {
         log.warn("Incorrect password: {}", e.getMessage());
 
         ResponseResult result = ResponseResult.error(
-                e.getCode(),
+                ResultCode.USER_CREDENTIALS_ERROR.getCode(),
                 e.getMessage()
         );
 
