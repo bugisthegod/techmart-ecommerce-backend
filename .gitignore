@@ -42,3 +42,11 @@ replay_pid*
 /.claude/settings.local.json
 **/target/
 **/logs
+/.github/agents/Senior Java Spring Boot Developer.agent.md
+/.github/agents/code-reviewer-pro.agent.md
+/.idea/copilot.data.migration.agent.xml
+/.idea/copilot.data.migration.ask.xml
+/.idea/copilot.data.migration.ask2agent.xml
+/.idea/copilot.data.migration.edit.xml
+/.idea/copilotDiffState.xml
+/ecommerce.iml

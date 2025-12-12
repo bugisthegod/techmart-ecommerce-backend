@@ -6,7 +6,4 @@ public class CategoryAlreadyExistsException extends BaseException {
         super(409, "Category already exists with name: " + name);
     }
 
-    public static CategoryAlreadyExistsException name(String name) {
-        return new CategoryAlreadyExistsException("Category already exists with name: " + name);
-    }
 }

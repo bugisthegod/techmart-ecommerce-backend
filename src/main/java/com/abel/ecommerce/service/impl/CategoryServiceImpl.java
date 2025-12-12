@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Category createCategory(CategoryRequest request) {
         // Check if category name already exists
         if (categoryRepository.existsByName(request.getName())) {
-            throw CategoryAlreadyExistsException.name(request.getName());
+            throw new CategoryAlreadyExistsException(request.getName());
         }
 
         // Check if parent category exists (if parentId is not 0)
@@ -50,7 +50,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Check if new name conflicts with other categories
         if (!existingCategory.getName().equals(request.getName()) &&
                 categoryRepository.existsByName(request.getName())) {
-            throw CategoryAlreadyExistsException.name(request.getName());
+            throw new CategoryAlreadyExistsException(request.getName());
         }
 
         // Check if parent category exists (if parentId is not 0)
