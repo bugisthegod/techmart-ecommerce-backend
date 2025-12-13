@@ -3,6 +3,7 @@ package com.abel.ecommerce.controller;
 import com.abel.ecommerce.dto.request.ProductRequest;
 import com.abel.ecommerce.entity.Product;
 import com.abel.ecommerce.exception.ProductNotFoundException;
+import com.abel.ecommerce.filter.RateLimitFilter;
 import com.abel.ecommerce.service.ProductService;
 import com.abel.ecommerce.service.TokenBlacklistService;
 import com.abel.ecommerce.service.UserRoleCacheService;
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -50,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Note: This only tests the web layer, service layer is mocked
  */
 @EnableMethodSecurity
-@WebMvcTest(ProductController.class)
+@WebMvcTest(controllers = ProductController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = RateLimitFilter.class))
 @DisplayName("ProductController Web Layer Tests")
 class ProductControllerTest {
 

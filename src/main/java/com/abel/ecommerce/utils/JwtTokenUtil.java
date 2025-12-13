@@ -24,16 +24,18 @@ public class JwtTokenUtil {
     /**
      * Generate JWT token with 50 minutes expiration
      * @param username Username to be encoded in token
+     * @param userId User ID to be encoded in token
      * @return JWT token string
      * @throws Exception If token generation fails
      */
-    public static String generateToken(String username) throws Exception {
+    public static String generateToken(String username, Long userId) throws Exception {
         try {
             Date expirationDate = new Date(System.currentTimeMillis() + EXPIRE_TIME);
             Algorithm algorithm = Algorithm.HMAC256(SECRET);
             return JWT.create()
                     // Save username to token
                     .withAudience(username)
+                    .withClaim("userId", userId)
                     // Token expires in 50 minutes
                     .withExpiresAt(expirationDate)
                     // Sign with secret key
@@ -43,6 +45,7 @@ public class JwtTokenUtil {
             throw new Exception("Token generation failed");
         }
     }
+
 
     /**
      * Extract username from token
@@ -57,6 +60,20 @@ public class JwtTokenUtil {
                 throw new JWTDecodeException("Invalid token format");
             }
             return audience.get(0);
+    }
+
+    /**
+     * Extract userId from token
+     * @param token JWT token
+     * @return User ID stored in token, or null if not present
+     */
+    public static Long getUserIdFromToken(String token) {
+        try {
+            DecodedJWT decode = JWT.decode(token);
+            return decode.getClaim("userId").asLong();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

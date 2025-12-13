@@ -4,6 +4,7 @@ import com.abel.ecommerce.dto.request.AddressRequest;
 import com.abel.ecommerce.entity.Address;
 import com.abel.ecommerce.exception.AddressNotFoundException;
 import com.abel.ecommerce.exception.DefaultAddressException;
+import com.abel.ecommerce.filter.RateLimitFilter;
 import com.abel.ecommerce.service.AddressService;
 import com.abel.ecommerce.service.TokenBlacklistService;
 import com.abel.ecommerce.service.UserRoleCacheService;
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -35,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Controller tests for AddressController
  */
 @EnableMethodSecurity
-@WebMvcTest(AddressController.class)
+@WebMvcTest(controllers = AddressController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = RateLimitFilter.class))
 @DisplayName("AddressController Web Layer Tests")
 class AddressControllerTest {
 

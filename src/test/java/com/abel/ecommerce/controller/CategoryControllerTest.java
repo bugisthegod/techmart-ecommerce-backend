@@ -4,6 +4,7 @@ import com.abel.ecommerce.dto.request.CategoryRequest;
 import com.abel.ecommerce.entity.Category;
 import com.abel.ecommerce.exception.CategoryAlreadyExistsException;
 import com.abel.ecommerce.exception.CategoryNotFoundException;
+import com.abel.ecommerce.filter.RateLimitFilter;
 import com.abel.ecommerce.service.CategoryService;
 import com.abel.ecommerce.service.TokenBlacklistService;
 import com.abel.ecommerce.service.UserRoleCacheService;
@@ -16,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -34,7 +37,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = CategoryController.class)
+@WebMvcTest(controllers = CategoryController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = RateLimitFilter.class))
 @EnableMethodSecurity
 @AutoConfigureMockMvc(addFilters = false)
 @ExtendWith(MockitoExtension.class)

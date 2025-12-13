@@ -299,7 +299,7 @@ class UserServiceImplTest {
     @DisplayName("Should logout successfully with valid token")
     void logout_Success() throws Exception {
         // Arrange
-        String validToken = JwtTokenUtil.generateToken(testUser.getUsername());
+        String validToken = JwtTokenUtil.generateToken(testUser.getUsername(), testUser.getId());
         doNothing().when(tokenBlacklistService).blacklistToken(validToken);
 
         // Act

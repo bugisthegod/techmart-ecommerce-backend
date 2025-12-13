@@ -8,6 +8,7 @@ import com.abel.ecommerce.entity.User;
 import com.abel.ecommerce.exception.IncorrectPasswordException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
+import com.abel.ecommerce.filter.RateLimitFilter;
 import com.abel.ecommerce.service.TokenBlacklistService;
 import com.abel.ecommerce.service.UserRoleCacheService;
 import com.abel.ecommerce.service.UserService;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -37,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Controller tests for UserController
  */
 @EnableMethodSecurity
-@WebMvcTest(UserController.class)
+@WebMvcTest(controllers = UserController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = RateLimitFilter.class))
 @DisplayName("UserController Web Layer Tests")
 class UserControllerTest {
 

@@ -75,8 +75,9 @@ public class UserServiceImpl implements UserService {
 
         String token;
         try {
-            token = JwtTokenUtil.generateToken(user.getUsername());
-        } catch (Exception e) {
+            token = JwtTokenUtil.generateToken(user.getUsername(), user.getId());
+        }
+        catch (Exception e) {
             throw new RuntimeException("Failed to generate token", e);
         }
 
@@ -106,7 +107,8 @@ public class UserServiceImpl implements UserService {
         try {
             String username = JwtTokenUtil.getUsernameFromToken(token);
             tokenBlacklistService.blacklistToken(token);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Invalid token provided for logout", e);
         }
     }
