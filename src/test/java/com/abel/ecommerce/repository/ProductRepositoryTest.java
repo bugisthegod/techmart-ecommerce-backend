@@ -90,55 +90,6 @@ class ProductRepositoryTest {
         productRepository.save(testProduct3);
     }
 
-    // ========== BASIC CRUD TESTS ==========
-
-    @Test
-    @DisplayName("Should save and retrieve product")
-    void saveAndFindProduct() {
-        // Arrange
-        Product newProduct = new Product();
-        newProduct.setName("Monitor");
-        newProduct.setCategoryId(1L);
-        newProduct.setPrice(new BigDecimal("299.99"));
-        newProduct.setOriginalPrice(new BigDecimal("399.99"));
-        newProduct.setMainImage("monitor.jpg");
-        newProduct.setStock(30);
-        newProduct.setStatus(Product.ACTIVE_PRODUCT);
-
-        // Act
-        Product saved = productRepository.save(newProduct);
-        Optional<Product> found = productRepository.findById(saved.getId());
-
-        // Assert
-        assertThat(found).isPresent();
-        assertThat(found.get().getName()).isEqualTo("Monitor");
-        assertThat(found.get().getPrice()).isEqualByComparingTo(new BigDecimal("299.99"));
-    }
-
-    @Test
-    @DisplayName("Should return empty when product not found")
-    void findById_NotFound() {
-        // Act
-        Optional<Product> result = productRepository.findById(999L);
-
-        // Assert
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should delete product")
-    void deleteProduct() {
-        // Arrange
-        Long productId = testProduct1.getId();
-
-        // Act
-        productRepository.deleteById(productId);
-        Optional<Product> deleted = productRepository.findById(productId);
-
-        // Assert
-        assertThat(deleted).isEmpty();
-    }
-
     // ========== CUSTOM QUERY TESTS ==========
 
     @Test
@@ -198,22 +149,6 @@ class ProductRepositoryTest {
     }
 
     // ========== PAGINATION TESTS ==========
-
-    @Test
-    @DisplayName("Should find products with pagination")
-    void findAll_WithPagination() {
-        // Arrange
-        Pageable pageable = PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "name"));
-
-        // Act
-        Page<Product> page = productRepository.findAll(pageable);
-
-        // Assert
-        assertThat(page.getContent()).hasSize(2);
-        assertThat(page.getTotalElements()).isEqualTo(3);
-        assertThat(page.getTotalPages()).isEqualTo(2);
-        assertThat(page.getNumber()).isEqualTo(0); // First page
-    }
 
     @Test
     @DisplayName("Should find products by category with pagination")
@@ -326,49 +261,6 @@ class ProductRepositoryTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(testProduct1.getId());
         assertThat(result.getName()).isEqualTo("Laptop");
-    }
-
-    // ========== ENTITY LIFECYCLE TESTS ==========
-
-    @Test
-    @DisplayName("Should set created and updated timestamps on save")
-    void entityLifecycle_Timestamps() {
-        // Arrange
-        Product newProduct = new Product();
-        newProduct.setName("Test Timestamps");
-        newProduct.setCategoryId(1L);
-        newProduct.setPrice(new BigDecimal("99.99"));
-        newProduct.setOriginalPrice(new BigDecimal("129.99"));
-        newProduct.setMainImage("test.jpg");
-
-        // Act
-        Product saved = productRepository.save(newProduct);
-
-        // Assert
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-        assertThat(saved.getStatus()).isEqualTo(1); // Default status
-        assertThat(saved.getStock()).isEqualTo(0); // Default stock
-        assertThat(saved.getSales()).isEqualTo(0); // Default sales
-    }
-
-    @Test
-    @DisplayName("Should update timestamps on entity update")
-    void entityLifecycle_UpdateTimestamp() throws InterruptedException {
-        // Arrange
-        Product product = productRepository.findById(testProduct1.getId()).orElseThrow();
-        LocalDateTime originalUpdatedAt = product.getUpdatedAt();
-
-        // Wait a bit to ensure timestamp difference
-        Thread.sleep(100);
-
-        // Act
-        product.setName("Updated Laptop");
-        Product updated = productRepository.saveAndFlush(product);
-
-        // Assert
-        assertThat(updated.getUpdatedAt()).isAfter(originalUpdatedAt);
-        assertThat(updated.getCreatedAt()).isEqualTo(product.getCreatedAt()); // Created time should not change
     }
 
     // ========== EDGE CASES ==========

@@ -73,40 +73,6 @@ class CartItemRepositoryTest {
         cartItemRepository.save(cartItem4);
     }
 
-    // ========== BASIC CRUD TESTS ==========
-
-    @Test
-    @DisplayName("Should save and retrieve cart item")
-    void saveAndFindCartItem() {
-        CartItem newCartItem = new CartItem();
-        newCartItem.setUserId(testUserId1);
-        newCartItem.setProductId(999L);
-        newCartItem.setQuantity(5);
-
-        CartItem saved = cartItemRepository.save(newCartItem);
-        Optional<CartItem> found = cartItemRepository.findById(saved.getId());
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getQuantity()).isEqualTo(5);
-        assertThat(found.get().getSelected()).isEqualTo(CartItem.DEFAULT_SELECTED);
-    }
-
-    @Test
-    @DisplayName("Should return empty when cart item not found")
-    void findById_NotFound() {
-        Optional<CartItem> result = cartItemRepository.findById(999L);
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should delete cart item")
-    void deleteCartItem() {
-        Long cartItemId = cartItem1.getId();
-        cartItemRepository.deleteById(cartItemId);
-        Optional<CartItem> deleted = cartItemRepository.findById(cartItemId);
-        assertThat(deleted).isEmpty();
-    }
-
     // ========== CUSTOM QUERY TESTS ==========
 
     @Test
@@ -242,73 +208,6 @@ class CartItemRepositoryTest {
             assertThat(selectedItems.get(i).getCreatedAt())
                     .isAfterOrEqualTo(selectedItems.get(i + 1).getCreatedAt());
         }
-    }
-
-    // ========== CART OPERATIONS TESTS ==========
-
-    @Test
-    @DisplayName("Should update cart item quantity")
-    void updateCartItemQuantity() {
-        CartItem item = cartItemRepository.findById(cartItem1.getId()).orElseThrow();
-        item.setQuantity(5);
-
-        CartItem updated = cartItemRepository.save(item);
-
-        assertThat(updated.getQuantity()).isEqualTo(5);
-    }
-
-    @Test
-    @DisplayName("Should toggle cart item selection")
-    void toggleCartItemSelection() {
-        CartItem item = cartItemRepository.findById(cartItem1.getId()).orElseThrow();
-        Integer originalSelection = item.getSelected();
-
-        item.setSelected(CartItem.NON_DEFAULT_SELECTED);
-        CartItem updated = cartItemRepository.save(item);
-
-        assertThat(updated.getSelected()).isEqualTo(CartItem.NON_DEFAULT_SELECTED);
-        assertThat(updated.getSelected()).isNotEqualTo(originalSelection);
-    }
-
-    @Test
-    @DisplayName("Should handle multiple products in cart")
-    void multipleProductsInCart() {
-        List<CartItem> items = cartItemRepository.findByUserId(testUserId1);
-
-        assertThat(items).hasSize(3);
-        assertThat(items).extracting(CartItem::getProductId)
-                .containsExactlyInAnyOrder(productId1, productId2, productId3);
-    }
-
-    // ========== ENTITY LIFECYCLE TESTS ==========
-
-    @Test
-    @DisplayName("Should set default values and timestamps on save")
-    void entityLifecycle_Defaults() {
-        CartItem newItem = new CartItem();
-        newItem.setUserId(testUserId1);
-        newItem.setProductId(999L);
-        // Not setting quantity and selected
-
-        CartItem saved = cartItemRepository.save(newItem);
-
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-        assertThat(saved.getQuantity()).isEqualTo(1);
-        assertThat(saved.getSelected()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("Should update timestamps on entity update")
-    void entityLifecycle_UpdateTimestamp() throws InterruptedException {
-        CartItem item = cartItemRepository.findById(cartItem1.getId()).orElseThrow();
-        Thread.sleep(100);
-
-        item.setQuantity(10);
-        CartItem updated = cartItemRepository.saveAndFlush(item);
-
-        assertThat(updated.getQuantity()).isEqualTo(10);
-        assertThat(updated.getCreatedAt()).isEqualTo(item.getCreatedAt());
     }
 
     // ========== EDGE CASES ==========

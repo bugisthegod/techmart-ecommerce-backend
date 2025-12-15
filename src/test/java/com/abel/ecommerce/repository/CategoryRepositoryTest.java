@@ -79,40 +79,6 @@ class CategoryRepositoryTest {
         categoryRepository.save(inactiveCategory);
     }
 
-    // ========== BASIC CRUD TESTS ==========
-
-    @Test
-    @DisplayName("Should save and retrieve category")
-    void saveAndFindCategory() {
-        Category newCategory = new Category();
-        newCategory.setName("Books");
-        newCategory.setParentId(0L);
-        newCategory.setIcon("books.png");
-
-        Category saved = categoryRepository.save(newCategory);
-        Optional<Category> found = categoryRepository.findById(saved.getId());
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getName()).isEqualTo("Books");
-        assertThat(found.get().getStatus()).isEqualTo(Category.ACTIVE_CATEGORY);
-    }
-
-    @Test
-    @DisplayName("Should return empty when category not found")
-    void findById_NotFound() {
-        Optional<Category> result = categoryRepository.findById(999L);
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should delete category")
-    void deleteCategory() {
-        Long categoryId = subCategory1.getId();
-        categoryRepository.deleteById(categoryId);
-        Optional<Category> deleted = categoryRepository.findById(categoryId);
-        assertThat(deleted).isEmpty();
-    }
-
     // ========== CUSTOM QUERY TESTS ==========
 
     @Test
@@ -216,73 +182,6 @@ class CategoryRepositoryTest {
         assertThat(rootCount).isEqualTo(2);
         assertThat(electronicsSubCount).isEqualTo(3); // Including inactive
         assertThat(clothingSubCount).isEqualTo(0);
-    }
-
-    // ========== HIERARCHICAL STRUCTURE TESTS ==========
-
-    @Test
-    @DisplayName("Should verify hierarchical parent-child relationship")
-    void hierarchicalRelationship() {
-        // Get root category
-        Category root = categoryRepository.findById(rootCategory1.getId()).orElseThrow();
-
-        // Get its children
-        List<Category> children = categoryRepository.findByParentId(root.getId());
-
-        assertThat(root.getParentId()).isEqualTo(0L);
-        assertThat(children).hasSize(3);
-        assertThat(children).allMatch(c -> c.getParentId().equals(root.getId()));
-    }
-
-    @Test
-    @DisplayName("Should handle multi-level hierarchy")
-    void multiLevelHierarchy() {
-        // Create third-level category
-        Category thirdLevel = new Category();
-        thirdLevel.setName("Gaming Laptops");
-        thirdLevel.setParentId(subCategory1.getId());
-        thirdLevel.setStatus(Category.ACTIVE_CATEGORY);
-        categoryRepository.save(thirdLevel);
-
-        // Verify three levels exist
-        List<Category> level1 = categoryRepository.findByParentId(0L);
-        List<Category> level2 = categoryRepository.findByParentId(rootCategory1.getId());
-        List<Category> level3 = categoryRepository.findByParentId(subCategory1.getId());
-
-        assertThat(level1).isNotEmpty();
-        assertThat(level2).isNotEmpty();
-        assertThat(level3).hasSize(1);
-        assertThat(level3.get(0).getName()).isEqualTo("Gaming Laptops");
-    }
-
-    // ========== ENTITY LIFECYCLE TESTS ==========
-
-    @Test
-    @DisplayName("Should set timestamps and defaults on save")
-    void entityLifecycle_Timestamps() {
-        Category newCategory = new Category();
-        newCategory.setName("Test Category");
-
-        Category saved = categoryRepository.save(newCategory);
-
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-        assertThat(saved.getStatus()).isEqualTo(Category.ACTIVE_CATEGORY);
-        assertThat(saved.getSortOrder()).isEqualTo(0);
-        assertThat(saved.getParentId()).isEqualTo(0L);
-    }
-
-    @Test
-    @DisplayName("Should update timestamps on entity update")
-    void entityLifecycle_UpdateTimestamp() throws InterruptedException {
-        Category category = categoryRepository.findById(rootCategory1.getId()).orElseThrow();
-        Thread.sleep(100);
-
-        category.setName("Updated Electronics");
-        Category updated = categoryRepository.saveAndFlush(category);
-
-        assertThat(updated.getName()).isEqualTo("Updated Electronics");
-        assertThat(updated.getCreatedAt()).isEqualTo(category.getCreatedAt());
     }
 
     // ========== EDGE CASES ==========

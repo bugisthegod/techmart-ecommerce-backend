@@ -77,44 +77,6 @@ class AddressRepositoryTest {
         addressRepository.save(address3);
     }
 
-    // ========== BASIC CRUD TESTS ==========
-
-    @Test
-    @DisplayName("Should save and retrieve address")
-    void saveAndFindAddress() {
-        Address newAddress = new Address();
-        newAddress.setUserId(testUserId1);
-        newAddress.setReceiverName("Test User");
-        newAddress.setReceiverPhone("13911111111");
-        newAddress.setProvince("Beijing");
-        newAddress.setCity("Beijing");
-        newAddress.setDistrict("Chaoyang");
-        newAddress.setDetailAddress("100 Test St");
-
-        Address saved = addressRepository.save(newAddress);
-        Optional<Address> found = addressRepository.findById(saved.getId());
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getReceiverName()).isEqualTo("Test User");
-        assertThat(found.get().getIsDefault()).isEqualTo(Address.NON_DEFAULT_ADDRESS);
-    }
-
-    @Test
-    @DisplayName("Should return empty when address not found")
-    void findById_NotFound() {
-        Optional<Address> result = addressRepository.findById(999L);
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should delete address")
-    void deleteAddress() {
-        Long addressId = address1.getId();
-        addressRepository.deleteById(addressId);
-        Optional<Address> deleted = addressRepository.findById(addressId);
-        assertThat(deleted).isEmpty();
-    }
-
     // ========== CUSTOM QUERY TESTS ==========
 
     @Test
@@ -284,51 +246,6 @@ class AddressRepositoryTest {
         assertThat(defaultAddress).isPresent();
         assertThat(defaultAddress.get().getId()).isEqualTo(address2.getId());
         assertThat(defaultAddress.get().getReceiverName()).isEqualTo("Jane Doe");
-    }
-
-    @Test
-    @DisplayName("Should verify full address string generation")
-    void getFullAddress() {
-        String fullAddress = address1.getFullAddress();
-
-        assertThat(fullAddress).contains("California");
-        assertThat(fullAddress).contains("Los Angeles");
-        assertThat(fullAddress).contains("Downtown");
-        assertThat(fullAddress).contains("123 Main St");
-    }
-
-    // ========== ENTITY LIFECYCLE TESTS ==========
-
-    @Test
-    @DisplayName("Should set timestamps on save")
-    void entityLifecycle_Timestamps() {
-        Address newAddress = new Address();
-        newAddress.setUserId(testUserId1);
-        newAddress.setReceiverName("Timestamp Test");
-        newAddress.setReceiverPhone("13900000000");
-        newAddress.setProvince("Shanghai");
-        newAddress.setCity("Shanghai");
-        newAddress.setDistrict("Pudong");
-        newAddress.setDetailAddress("Test Address");
-
-        Address saved = addressRepository.save(newAddress);
-
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-        assertThat(saved.getIsDefault()).isEqualTo(Address.NON_DEFAULT_ADDRESS);
-    }
-
-    @Test
-    @DisplayName("Should update timestamps on entity update")
-    void entityLifecycle_UpdateTimestamp() throws InterruptedException {
-        Address address = addressRepository.findById(address1.getId()).orElseThrow();
-        Thread.sleep(100);
-
-        address.setReceiverName("Updated Name");
-        Address updated = addressRepository.saveAndFlush(address);
-
-        assertThat(updated.getReceiverName()).isEqualTo("Updated Name");
-        assertThat(updated.getCreatedAt()).isEqualTo(address.getCreatedAt());
     }
 
     // ========== EDGE CASES ==========

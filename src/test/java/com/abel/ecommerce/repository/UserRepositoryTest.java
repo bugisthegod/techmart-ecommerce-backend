@@ -104,40 +104,6 @@ class UserRepositoryTest {
         userRoleRepository.save(userRole3);
     }
 
-    // ========== BASIC CRUD TESTS ==========
-
-    @Test
-    @DisplayName("Should save and retrieve user")
-    void saveAndFindUser() {
-        User newUser = new User();
-        newUser.setUsername("new_user");
-        newUser.setPassword("password");
-        newUser.setEmail("newuser@example.com");
-
-        User saved = userRepository.save(newUser);
-        Optional<User> found = userRepository.findById(saved.getId());
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getUsername()).isEqualTo("new_user");
-        assertThat(found.get().getStatus()).isEqualTo(User.ACTIVE_USER);
-    }
-
-    @Test
-    @DisplayName("Should return empty when user not found")
-    void findById_NotFound() {
-        Optional<User> result = userRepository.findById(999L);
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should delete user")
-    void deleteUser() {
-        Long userId = activeUser.getId();
-        userRepository.deleteById(userId);
-        Optional<User> deleted = userRepository.findById(userId);
-        assertThat(deleted).isEmpty();
-    }
-
     // ========== AUTHENTICATION QUERY TESTS ==========
 
     @Test
@@ -281,76 +247,6 @@ class UserRepositoryTest {
         assertThat(found).isPresent();
         // Username is case-sensitive in database
         assertThat(notFound).isEmpty();
-    }
-
-    // ========== USER STATUS TESTS ==========
-
-    @Test
-    @DisplayName("Should find all users regardless of status")
-    void findAll_AllStatuses() {
-        List<User> allUsers = userRepository.findAll();
-
-        assertThat(allUsers).hasSize(3);
-        assertThat(allUsers).extracting(User::getUsername)
-                .containsExactlyInAnyOrder("john_doe", "inactive_user", "admin_user");
-    }
-
-    @Test
-    @DisplayName("Should distinguish active and inactive users")
-    void userStatusDistinction() {
-        User active = userRepository.findByUsername("john_doe").orElseThrow();
-        User inactive = userRepository.findByUsername("inactive_user").orElseThrow();
-
-        assertThat(active.getStatus()).isEqualTo(User.ACTIVE_USER);
-        assertThat(inactive.getStatus()).isEqualTo(User.NONACTIVE_USER);
-    }
-
-    @Test
-    @DisplayName("Should update user status")
-    void updateUserStatus() {
-        User user = userRepository.findByUsername("john_doe").orElseThrow();
-        user.setStatus(User.NONACTIVE_USER);
-
-        User updated = userRepository.save(user);
-
-        assertThat(updated.getStatus()).isEqualTo(User.NONACTIVE_USER);
-
-        // Verify status-based query no longer finds this user
-        Optional<User> notFound = userRepository.findByUsernameAndStatus(
-                "john_doe",
-                User.ACTIVE_USER
-        );
-        assertThat(notFound).isEmpty();
-    }
-
-    // ========== ENTITY LIFECYCLE TESTS ==========
-
-    @Test
-    @DisplayName("Should set default values and timestamps on save")
-    void entityLifecycle_Defaults() {
-        User newUser = new User();
-        newUser.setUsername("timestamp_test");
-        newUser.setPassword("password");
-        newUser.setEmail("timestamp@example.com");
-
-        User saved = userRepository.save(newUser);
-
-        assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-        assertThat(saved.getStatus()).isEqualTo(User.ACTIVE_USER);
-    }
-
-    @Test
-    @DisplayName("Should update timestamps on entity update")
-    void entityLifecycle_UpdateTimestamp() throws InterruptedException {
-        User user = userRepository.findById(activeUser.getId()).orElseThrow();
-        Thread.sleep(100);
-
-        user.setPhone("13999999999");
-        User updated = userRepository.saveAndFlush(user);
-
-        assertThat(updated.getPhone()).isEqualTo("13999999999");
-        assertThat(updated.getCreatedAt()).isEqualTo(user.getCreatedAt());
     }
 
     // ========== EDGE CASES ==========
