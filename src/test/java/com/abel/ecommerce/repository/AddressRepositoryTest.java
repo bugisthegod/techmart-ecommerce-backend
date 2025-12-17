@@ -48,6 +48,7 @@ class AddressRepositoryTest {
         address1.setProvince("California");
         address1.setCity("Los Angeles");
         address1.setDistrict("Downtown");
+        address1.setPostalCode("D02X285");
         address1.setDetailAddress("123 Main St");
         address1.setIsDefault(Address.DEFAULT_ADDRESS);
 
@@ -58,6 +59,7 @@ class AddressRepositoryTest {
         address2.setProvince("New York");
         address2.setCity("New York");
         address2.setDistrict("Manhattan");
+        address2.setPostalCode("D15VP38");
         address2.setDetailAddress("456 Park Ave");
         address2.setIsDefault(Address.NON_DEFAULT_ADDRESS);
 
@@ -69,6 +71,7 @@ class AddressRepositoryTest {
         address3.setProvince("Texas");
         address3.setCity("Houston");
         address3.setDistrict("Midtown");
+        address3.setPostalCode("T12AB34");
         address3.setDetailAddress("789 Oak Rd");
         address3.setIsDefault(Address.DEFAULT_ADDRESS);
 

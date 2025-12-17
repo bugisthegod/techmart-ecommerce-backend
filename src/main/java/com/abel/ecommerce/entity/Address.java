@@ -57,6 +57,11 @@ public class Address {
     @Column(nullable = false, length = 50)
     private String district;
 
+    @NotBlank(message = "Postal code cannot be blank")
+    @Pattern(regexp = "^[A-Za-z0-9]{3}\\s?[A-Za-z0-9]{4}$", message = "Invalid Irish Eircode format")
+    @Column(name = "postal_code", nullable = false, length = 10)
+    private String postalCode;
+
     @NotBlank(message = "Detail address cannot be blank")
     @Size(max = 255, message = "Detail address cannot exceed 255 characters")
     @Column(name = "detail_address", nullable = false)

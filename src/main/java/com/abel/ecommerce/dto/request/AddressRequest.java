@@ -28,6 +28,10 @@ public class AddressRequest {
     @Size(max = 50, message = "District name cannot exceed 50 characters")
     private String district;
 
+    @NotBlank(message = "Postal code cannot be blank")
+    @Pattern(regexp = "^[A-Za-z0-9]{3}\\s?[A-Za-z0-9]{4}$", message = "Invalid Irish Eircode format")
+    private String postalCode;
+
     @NotBlank(message = "Detail address cannot be blank")
     @Size(max = 255, message = "Detail address cannot exceed 255 characters")
     private String detailAddress;

@@ -50,20 +50,22 @@ class AddressServiceImplTest {
         testAddress.setId(1L);
         testAddress.setUserId(testUserId);
         testAddress.setReceiverName("John Doe");
-        testAddress.setReceiverPhone("1234567890");
+        testAddress.setReceiverPhone("13812345678");
         testAddress.setProvince("California");
         testAddress.setCity("Los Angeles");
         testAddress.setDistrict("Downtown");
+        testAddress.setPostalCode("D02X285");
         testAddress.setDetailAddress("123 Main St");
         testAddress.setIsDefault(Address.DEFAULT_ADDRESS);
 
         // Create test address request
         testAddressRequest = new AddressRequest();
         testAddressRequest.setReceiverName("Jane Smith");
-        testAddressRequest.setReceiverPhone("0987654321");
+        testAddressRequest.setReceiverPhone("13987654321");
         testAddressRequest.setProvince("New York");
         testAddressRequest.setCity("New York");
         testAddressRequest.setDistrict("Manhattan");
+        testAddressRequest.setPostalCode("D15VP38");
         testAddressRequest.setDetailAddress("456 Park Ave");
         testAddressRequest.setIsDefault(Address.NON_DEFAULT_ADDRESS);
     }

@@ -14,11 +14,12 @@ public class AddressResponse {
     private String province;
     private String city;
     private String district;
+    private String postalCode;
     private String detailAddress;
     private Integer isDefault;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
     // Computed fields for convenience
     private String fullAddress;
     private boolean defaultAddress;

@@ -75,6 +75,7 @@ class AddressControllerTest {
         testAddress.setProvince("California");
         testAddress.setCity("Los Angeles");
         testAddress.setDistrict("Downtown");
+        testAddress.setPostalCode("D02X285");
         testAddress.setDetailAddress("123 Main St");
         testAddress.setIsDefault(Address.DEFAULT_ADDRESS);
 
@@ -85,6 +86,7 @@ class AddressControllerTest {
         testAddressRequest.setProvince("New York");
         testAddressRequest.setCity("New York");
         testAddressRequest.setDistrict("Manhattan");
+        testAddressRequest.setPostalCode("D15VP38");
         testAddressRequest.setDetailAddress("456 Park Ave");
         testAddressRequest.setIsDefault(Address.NON_DEFAULT_ADDRESS);
 
@@ -95,6 +97,7 @@ class AddressControllerTest {
         invalidPhoneAddressRequest.setProvince("Shanghai");
         invalidPhoneAddressRequest.setCity("Pudong");
         invalidPhoneAddressRequest.setDistrict("Lujiazui");
+        invalidPhoneAddressRequest.setPostalCode("A65F4E2");
         invalidPhoneAddressRequest.setDetailAddress("999 Century Ave");
         invalidPhoneAddressRequest.setIsDefault(Address.NON_DEFAULT_ADDRESS);
     }
@@ -256,6 +259,7 @@ class AddressControllerTest {
         address2.setReceiverName("Bob Smith");
         address2.setProvince("Texas");
         address2.setCity("Houston");
+        address2.setPostalCode("T12AB34");
 
         List<Address> addresses = Arrays.asList(testAddress, address2);
         when(addressService.findAddressesByUserId(testUserId)).thenReturn(addresses);
