@@ -20,7 +20,7 @@ public class SeckillMessageTask {
 
     private final RabbitTemplate rabbitTemplate;
 
-    @Scheduled(fixedRate = 5000)
+//    @Scheduled(fixedRate = 5000)
     public void scanAndSend() {
         List<SeckillMessage> pendingMessages = messageRepository.findPendingMessagesForRetry(LocalDateTime.now());
 

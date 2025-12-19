@@ -59,9 +59,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()  // Allow registration and login
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
-//                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-//                        .anyRequest().authenticated()  // All other requests require authentication
-                                .anyRequest().permitAll()  // All other requests require authentication
+                                .requestMatchers("/api/webhooks/stripe").permitAll()  // Allow Stripe webhook endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .anyRequest().authenticated()  // All other requests require authentication
+//                                .anyRequest().permitAll()  // All other requests require authentication
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
         return http.build();

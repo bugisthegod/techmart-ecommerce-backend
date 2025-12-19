@@ -129,6 +129,33 @@
 			<version>8.7.0</version>
 		</dependency>
 
+		<!-- Selenium WebDriver for browser automation testing -->
+<!--		<dependency>-->
+<!--			<groupId>org.seleniumhq.selenium</groupId>-->
+<!--			<artifactId>selenium-java</artifactId>-->
+<!--			<version>4.27.0</version>-->
+<!--			<scope>test</scope>-->
+<!--		</dependency>-->
+
+<!--		&lt;!&ndash; Selenium Chrome Driver (built-in driver management in Selenium 4) &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>org.seleniumhq.selenium</groupId>-->
+<!--			<artifactId>selenium-chrome-driver</artifactId>-->
+<!--			<version>4.27.0</version>-->
+<!--			<scope>test</scope>-->
+<!--		</dependency>-->
+
+		<!-- WebDriverManager - Alternative automatic driver management (optional) -->
+		<!-- Uncomment if you prefer using WebDriverManager instead of Selenium's built-in manager -->
+		<!--
+		<dependency>
+			<groupId>io.github.bonigarcia</groupId>
+			<artifactId>webdrivermanager</artifactId>
+			<version>5.9.2</version>
+			<scope>test</scope>
+		</dependency>
+		-->
+
 	</dependencies>
 
 	<build>

@@ -33,6 +33,9 @@ public class User {
     private String phone;
     private String avatar;
 
+    @Column(name = "stripe_customer_id", length = 255)
+    private String stripeCustomerId;
+
     @Column(columnDefinition = "TINYINT DEFAULT 1")
     private Integer status = ACTIVE_USER;
 
