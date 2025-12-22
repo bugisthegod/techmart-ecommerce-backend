@@ -11,7 +11,8 @@ public interface OrderService {
 
     /**
      * Pay order (simulate payment)
-     * @param userId User ID
+     *
+     * @param userId  User ID
      * @param orderId Order ID
      * @return Updated order
      */
@@ -19,6 +20,7 @@ public interface OrderService {
 
     /**
      * Ship order
+     *
      * @param orderId Order ID
      * @return Updated order
      */
@@ -26,7 +28,8 @@ public interface OrderService {
 
     /**
      * Complete order
-     * @param userId User ID
+     *
+     * @param userId  User ID
      * @param orderId Order ID
      * @return Updated order
      */
@@ -34,7 +37,8 @@ public interface OrderService {
 
     /**
      * Cancel order
-     * @param userId User ID
+     *
+     * @param userId  User ID
      * @param orderId Order ID
      * @return Updated order
      */
@@ -42,6 +46,7 @@ public interface OrderService {
 
     /**
      * Find order by ID
+     *
      * @param orderId Order ID
      * @return Order entity
      */
@@ -49,15 +54,17 @@ public interface OrderService {
 
     /**
      * Find order by ID and user ID
+     *
      * @param orderId Order ID
-     * @param userId User ID
+     * @param userId  User ID
      * @return Order entity
      */
     Order findOrderByIdAndUserId(Long orderId, Long userId);
 
     /**
      * Find orders by user ID with pagination
-     * @param userId User ID
+     *
+     * @param userId   User ID
      * @param pageable Pagination parameters
      * @return Page of orders
      */
@@ -65,8 +72,9 @@ public interface OrderService {
 
     /**
      * Find orders by user ID and status with pagination
-     * @param userId User ID
-     * @param status Order status
+     *
+     * @param userId   User ID
+     * @param status   Order status
      * @param pageable Pagination parameters
      * @return Page of orders
      */
@@ -74,6 +82,7 @@ public interface OrderService {
 
     /**
      * Find order by order number
+     *
      * @param orderNo Order number
      * @return Order entity
      */
@@ -81,6 +90,7 @@ public interface OrderService {
 
     /**
      * Find order items by order ID
+     *
      * @param orderId Order ID
      * @return List of order items
      */
@@ -88,6 +98,7 @@ public interface OrderService {
 
     /**
      * Find order items by order number
+     *
      * @param orderNo Order number
      * @return List of order items
      */
@@ -95,6 +106,7 @@ public interface OrderService {
 
     /**
      * Count orders by user ID
+     *
      * @param userId User ID
      * @return Number of orders
      */
@@ -102,6 +114,7 @@ public interface OrderService {
 
     /**
      * Count orders by user ID and status
+     *
      * @param userId User ID
      * @param status Order status
      * @return Number of orders
@@ -110,6 +123,7 @@ public interface OrderService {
 
     /**
      * Generate unique order number
+     *
      * @param userId User ID
      * @return Generated order number
      */
@@ -117,6 +131,7 @@ public interface OrderService {
 
     /**
      * Generate order token for idempotency
+     *
      * @param userId User ID
      * @return Generated order token
      */
@@ -124,6 +139,7 @@ public interface OrderService {
 
     /**
      * Validate and delete order token
+     *
      * @param token Order token
      * @return true if token was valid and deleted
      */
@@ -131,6 +147,7 @@ public interface OrderService {
 
     /**
      * Check if order exists by order number
+     *
      * @param orderNo Order number
      * @return true if order exists
      */
@@ -138,6 +155,7 @@ public interface OrderService {
 
     /**
      * Save order items
+     *
      * @param orderItems List of order items
      * @return List of saved order items
      */
@@ -145,6 +163,7 @@ public interface OrderService {
 
     /**
      * Save order to database (create or update)
+     *
      * @param order Order entity
      * @return Saved order
      */
@@ -152,6 +171,7 @@ public interface OrderService {
 
     /**
      * Update order
+     *
      * @param order Order entity
      * @return Updated order
      */

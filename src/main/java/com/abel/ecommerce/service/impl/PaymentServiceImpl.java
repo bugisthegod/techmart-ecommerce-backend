@@ -139,7 +139,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public String getOrCreateStripeCustomer(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId.toString(), "id"));
+                .orElseThrow(() -> new UserNotFoundException(userId, "userId"));
 
         // Return existing customer if available
         if (user.getStripeCustomerId() != null && !user.getStripeCustomerId().isEmpty()) {

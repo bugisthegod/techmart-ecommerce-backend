@@ -141,8 +141,7 @@ public class CartController {
             response.setProductImage(product.getMainImage());
             response.setProductPrice(product.getPrice());
             response.setTotalAmount(product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-        }
-        catch (ProductNotFoundException e) {
+        } catch (ProductNotFoundException e) {
             // Handle case where product might have been deleted
             response.setProductName("Product not found");
             response.setProductPrice(BigDecimal.ZERO);

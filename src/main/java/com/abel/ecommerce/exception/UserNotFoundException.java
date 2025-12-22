@@ -12,4 +12,8 @@ public class UserNotFoundException extends BaseException {
         super(404, String.format("User not found with %s: %s", field, username));
     }
 
+    public UserNotFoundException(Long userId, String field) {
+        super(404, String.format("User not found with %s: %s", field, userId));
+    }
+
 }

@@ -9,6 +9,7 @@ public interface UserService {
 
     /**
      * Register a new user
+     *
      * @param request User registration request
      * @return Registered user
      */
@@ -16,6 +17,7 @@ public interface UserService {
 
     /**
      * Login user
+     *
      * @param request User login request
      * @return Login response with token and user info
      * @throws Exception if login fails
@@ -24,6 +26,7 @@ public interface UserService {
 
     /**
      * Find user by username
+     *
      * @param username Username to search for
      * @return User entity
      */
@@ -31,6 +34,7 @@ public interface UserService {
 
     /**
      * Logout user by blacklisting the provided token
+     *
      * @param token JWT token to invalidate
      */
     void logout(String token);

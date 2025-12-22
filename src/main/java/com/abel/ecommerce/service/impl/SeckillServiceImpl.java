@@ -107,8 +107,7 @@ public class SeckillServiceImpl implements SeckillService {
         map.put("createTime", System.currentTimeMillis());
         try {
             return objectMapper.writeValueAsString(map);  // 用fastjson或jackson
-        }
-        catch (JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             log.error("Failed to serialize seckill message: {}",
                     map, e);
             throw new RuntimeException("Failed to create message content", e);

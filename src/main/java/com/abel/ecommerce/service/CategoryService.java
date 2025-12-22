@@ -9,6 +9,7 @@ public interface CategoryService {
 
     /**
      * Create a new category
+     *
      * @param request Category creation request
      * @return Created category
      */
@@ -16,7 +17,8 @@ public interface CategoryService {
 
     /**
      * Update an existing category
-     * @param id Category ID
+     *
+     * @param id      Category ID
      * @param request Category update request
      * @return Updated category
      */
@@ -24,12 +26,14 @@ public interface CategoryService {
 
     /**
      * Delete a category by ID
+     *
      * @param id Category ID
      */
     void deleteCategory(Long id);
 
     /**
      * Find category by ID
+     *
      * @param id Category ID
      * @return Category entity
      */
@@ -37,18 +41,21 @@ public interface CategoryService {
 
     /**
      * Find all active categories
+     *
      * @return List of active categories
      */
     List<Category> findAllCategories();
 
     /**
      * Find top-level categories (categories without parent)
+     *
      * @return List of top-level categories
      */
     List<Category> findTopLevelCategories();
 
     /**
      * Find subcategories by parent ID
+     *
      * @param parentId Parent category ID
      * @return List of subcategories
      */
@@ -56,6 +63,7 @@ public interface CategoryService {
 
     /**
      * Check if category exists
+     *
      * @param categoryId Category ID
      * @return true if category exists and is active
      */
@@ -63,6 +71,7 @@ public interface CategoryService {
 
     /**
      * Get count of subcategories
+     *
      * @param categoryId Parent category ID
      * @return Number of subcategories
      */
