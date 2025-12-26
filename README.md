@@ -10,6 +10,7 @@ This is a **production-ready** e-commerce backend API built with modern Java tec
 - **JWT Authentication & Authorization** with role-based access control and token blacklist
 - **High-Concurrency Flash Sale System (Seckill)** with Redis + RabbitMQ
 - **Distributed Locking** with Redisson for race condition prevention
+- **Distributed Rate Limiting** with Bucket4j and Redis for API protection
 - **Reliable Message Queue** with idempotency guarantees
 - **Advanced Order Management** with state machine workflow and facade pattern
 - **Atomic Stock Management** using Redis Lua scripts
@@ -24,7 +25,7 @@ This is a **production-ready** e-commerce backend API built with modern Java tec
 |----------|-------------|
 | **Backend Framework** | Spring Boot 3.5.4, Spring Security, Spring Data JPA |
 | **Database** | MySQL 8.0+ with JPA/Hibernate ORM |
-| **Caching & Locking** | Redis with Spring Data Redis, Redisson 3.32.0 for distributed locks |
+| **Caching & Locking** | Redis with Spring Data Redis, Redisson 3.32.0 for distributed locks, Bucket4j for rate limiting |
 | **Message Queue** | RabbitMQ with Spring AMQP for async processing |
 | **Authentication** | JWT (java-jwt 3.8.1) with BCrypt encryption, Token Blacklist |
 | **Payment Gateway** | Stripe 24.3.0 (configured, ready for integration) |
@@ -110,6 +111,19 @@ This is a **production-ready** e-commerce backend API built with modern Java tec
 - **Automatic Unlock** - Always releases locks in finally block, checks `isHeldByCurrentThread()`
 - **Use Cases** - Order creation with multiple products, stock reservation
 
+### 🛡️ Rate Limiting System
+- **Token Bucket Algorithm** - Bucket4j implementation with greedy refill strategy
+- **Redis-Backed Distributed Rate Limiting** - Consistent rate limiting across multiple instances using Lettuce client
+- **Two-Level Protection**:
+  - **IP-based Rate Limiting**: 100 requests/second per IP address
+  - **User-based Rate Limiting**: 50 requests/second per authenticated user
+- **Proxy-Aware IP Detection** - Correctly identifies client IP behind proxies (X-Forwarded-For, X-Real-IP)
+- **HTTP 429 Response** - Returns "Too Many Requests" when limits exceeded
+- **Automatic Token Refill** - Buckets refill every second for continuous service
+- **5-Minute Expiration** - Inactive buckets automatically expire to conserve Redis memory
+- **JWT Integration** - Extracts user ID from JWT tokens for user-level rate limiting
+- **Protection Against** - DDoS attacks, API abuse, resource exhaustion
+
 ## 🏗️ System Architecture
 
 ```
@@ -120,6 +134,7 @@ This is a **production-ready** e-commerce backend API built with modern Java tec
 ┌─────────────────────────────────────────────────────────────────────┐
 │                  Controllers (REST API Layer)                        │
 │  UserController │ ProductController │ OrderController │ SeckillController
+│  ├── Rate Limit Filter (Bucket4j + Redis)                           │
 │  ├── JWT Authentication Filter                                      │
 │  ├── Global Exception Handler                                       │
 │  └── Response Wrapper (ResponseResult)                              │
@@ -150,6 +165,7 @@ This is a **production-ready** e-commerce backend API built with modern Java tec
 │               │  │ Token Blacklist     │     │  │ Payment Timeout ││
 │               │  │ User Participation  │     │  │ Message Retry   ││
 │               │  │ Distributed Locks   │     │  └─────────────────┘│
+│               │  │ Rate Limit Buckets  │     │                      │
 │               │  └─────────────────────┘     │                      │
 └───────────────┴──────────────────────────────┴──────────────────────┘
 
@@ -166,6 +182,7 @@ This is a **production-ready** e-commerce backend API built with modern Java tec
 - **Facade Pattern** - `OrderFacade` orchestrates complex multi-service transactions
 - **Message Queue Pattern** - Async processing with RabbitMQ for high-concurrency scenarios
 - **Distributed Lock Pattern** - Redisson multi-lock prevents race conditions
+- **Rate Limiting Pattern** - Token bucket algorithm with Redis for distributed API protection
 - **Idempotency Pattern** - `ReliableMessage` entity prevents duplicate processing
 - **Custom Exception Hierarchy** - 17 custom exceptions with proper HTTP status codes
 - **Entity-First Design** - Services return entities, controllers convert to DTOs
@@ -491,6 +508,7 @@ docker run -p 8080:8080 --env-file .env ecommerce-backend
 - **Address Management** - Multiple shipping addresses with default address support
 - **Seckill/Flash Sale System** - High-concurrency flash sales with Redis + RabbitMQ
 - **Distributed Locking** - Redisson multi-lock for race condition prevention
+- **Rate Limiting** - Bucket4j with Redis-backed distributed rate limiting (IP and user-based)
 - **Message Queue** - Reliable async processing with idempotency guarantees
 - **Testing Infrastructure** - 19+ JUnit tests with GitHub Actions CI/CD
 - **Docker Compose** - Local development environment with all services
@@ -508,7 +526,6 @@ docker run -p 8080:8080 --env-file .env ecommerce-backend
 - **Email Notifications** - Order confirmation, shipping updates
 - **Advanced Search** - Elasticsearch integration for full-text search
 - **Image Upload** - AWS S3 integration for product images
-- **Rate Limiting** - API rate limiting with Redis
 - **Caching Optimization** - Multi-level caching strategy
 
 ## 👨‍💻 Author
