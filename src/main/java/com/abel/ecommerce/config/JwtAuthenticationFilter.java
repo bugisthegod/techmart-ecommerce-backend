@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,13 +23,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private UserRoleCacheService userRoleCacheService;
 
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
+    private final UserRoleCacheService userRoleCacheService;
+    private final TokenBlacklistService tokenBlacklistService;;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,

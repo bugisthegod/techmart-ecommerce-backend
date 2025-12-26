@@ -43,6 +43,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         // Check IP rate limit using Redis-backed bucket
         String ipKey = IP_RATE_LIMIT_KEY_PREFIX + clientIp;
+
         BucketProxy ipBucket = proxyManager.builder()
                 .build(ipKey, () -> ipRateLimitConfig);
 
