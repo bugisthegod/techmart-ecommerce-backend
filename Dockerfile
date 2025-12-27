@@ -45,11 +45,15 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=prod
 
 # JVM options for container environment
-ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+# Using G1GC for better performance and container-aware memory settings
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 
-# Health check (optional, but recommended)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+# Health check
+# Increased start-period to 90s for slow startup (StockWarmer @PostConstruct loads Redis)
+# Increased interval to 60s to reduce overhead in production
+HEALTHCHECK --interval=60s --timeout=5s --start-period=90s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8080}/actuator/health || exit 1
 
 # Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Use exec form for proper signal handling (SIGTERM for graceful shutdown)
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

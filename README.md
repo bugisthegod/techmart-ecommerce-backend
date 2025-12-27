@@ -261,32 +261,98 @@ DELETE /api/categories/{id}  # Delete category (Admin)
 - **Redis Server** (required for distributed locks, caching, and seckill)
 - **RabbitMQ** (required for async message processing)
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Docker Compose (Recommended for Local Development)
 
-The easiest way to run the entire stack locally:
+The easiest way to set up the development environment with all required infrastructure services:
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/ecommerce-backend.git
 cd ecommerce-backend
 
-# Start all services (MySQL, Redis, RabbitMQ, Spring Boot app)
+# Create .env file with your credentials (or use the provided template)
+cp .env.example .env  # Edit this file with your settings
+
+# Start infrastructure services (MySQL, Redis, RabbitMQ)
 docker-compose up -d
 
-# View logs
-docker-compose logs -f app
+# Check service health
+docker-compose ps
 
-# Stop all services
-docker-compose down
+# Run the Spring Boot application (in a separate terminal)
+mvn spring-boot:run
+
+# Or run from your IDE (IntelliJ IDEA, Eclipse, VS Code)
 ```
 
-**Included Services:**
-- MySQL 8.0 (port 3306)
-- Redis 7.0 (port 6379)
-- RabbitMQ 3.12 with Management UI (ports 5672, 15672)
-- Spring Boot Application (port 8080)
+**Included Infrastructure Services:**
+- **MySQL 8.0** (port 3306) - Primary database with custom configuration
+  - Pre-configured with `ecommerce_db` database
+  - Custom my.cnf for optimized performance
+  - Credentials from `.env` file
+- **Redis 7.0** (port 6379) - Caching, distributed locks, rate limiting
+  - AOF persistence enabled
+  - 256MB memory limit with noeviction policy (prevents lock eviction)
+  - Resource limits: 512MB max memory
+- **RabbitMQ 3.12** with Management UI (ports 5672, 15672)
+  - AMQP messaging for seckill system
+  - Management UI at http://localhost:15672 (guest/guest)
+  - Resource limits: 512MB max memory
 
-All services configured with health checks and automatic restart policies.
+**All services configured with:**
+- Health checks and automatic restart policies
+- Resource limits to prevent system overload
+- Persistent volumes for data retention
+- Isolated Docker network for inter-service communication
+
+**Environment Configuration:**
+
+Create a `.env` file in the project root (already in `.gitignore`):
+```env
+# MySQL Configuration
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=ecommerce_db
+MYSQL_USER=abel
+MYSQL_PASSWORD=1234
+
+# Redis Configuration
+REDIS_PASSWORD=
+
+# RabbitMQ Configuration
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
+RABBITMQ_VHOST=/
+```
+
+**Useful Commands:**
+```bash
+# View logs for all services
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f mysql
+
+# Stop services (keeps data)
+docker-compose stop
+
+# Stop and remove containers (keeps volumes/data)
+docker-compose down
+
+# Stop and remove everything including data
+docker-compose down -v
+
+# Restart a specific service
+docker-compose restart redis
+
+# Access MySQL shell
+docker exec -it ecommerce-mysql mysql -uabel -p1234 ecommerce_db
+```
+
+**Why run app separately from Docker Compose?**
+- Faster development iteration (no Docker rebuild on code changes)
+- IDE debugging works normally
+- Spring DevTools hot reload enabled
+- See logs directly in IDE console
 
 ### Option 2: Manual Installation
 
@@ -452,26 +518,48 @@ See `RAILWAY_DEPLOYMENT.md` for detailed deployment guide.
 
 ### Docker Deployment
 
-**Using Docker Compose (Full Stack):**
+**Local Development with Docker Compose:**
 ```bash
+# Start infrastructure services only
 docker-compose up -d
+
+# Run Spring Boot app separately (see Quick Start section)
+mvn spring-boot:run
 ```
 
 **Production Dockerfile:**
-```dockerfile
-FROM openjdk:17-jre-slim
-WORKDIR /app
-COPY target/ecommerce-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+The project includes a multi-stage production Dockerfile optimized for cloud deployment:
+
+**Features:**
+- Multi-stage build (Maven build stage + JRE runtime stage)
+- Non-root user for security
+- G1GC garbage collector for better performance
+- Container-aware JVM memory settings
+- Health check with 90s startup grace period (for StockWarmer initialization)
+- Optimized for Railway/AWS/Cloud deployment
+
+**Build and Deploy:**
+```bash
+# Build the Docker image
+docker build -t ecommerce-backend .
+
+# Run locally (requires external MySQL, Redis, RabbitMQ)
+docker run -p 8080:8080 \
+  -e DATABASE_URL=jdbc:mysql://host:3306/ecommerce_db \
+  -e REDIS_URL=redis://host:6379 \
+  -e CLOUDAMQP_URL=amqp://user:pass@host:5672 \
+  ecommerce-backend
+
+# For Railway deployment, push to GitHub and Railway will auto-build
 ```
 
-**Build and Run:**
-```bash
-mvn clean package -DskipTests
-docker build -t ecommerce-backend .
-docker run -p 8080:8080 --env-file .env ecommerce-backend
-```
+**Dockerfile Highlights:**
+- Stage 1: Maven build with dependency caching
+- Stage 2: Minimal JRE runtime (Alpine Linux)
+- JVM Options: `-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseContainerSupport`
+- Health Check: `/actuator/health` endpoint with proper startup time
+- Security: Runs as non-root `spring` user
 
 ### Production Checklist
 

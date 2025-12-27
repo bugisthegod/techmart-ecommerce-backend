@@ -58,3 +58,6 @@ replay_pid*
 /.idea/leetcode/editor.xml
 /DOCKER_LOCAL_TESTING.md
 /CLAUDE.md
+
+# Environment variables
+.env

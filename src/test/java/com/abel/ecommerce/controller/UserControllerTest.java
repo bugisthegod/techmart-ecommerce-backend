@@ -1,10 +1,13 @@
 package com.abel.ecommerce.controller;
 
+import com.abel.ecommerce.config.JwtAuthenticationFilter;
+import com.abel.ecommerce.config.SecurityConfig;
 import com.abel.ecommerce.dto.request.UserLoginRequest;
 import com.abel.ecommerce.dto.request.UserRegisterRequest;
 import com.abel.ecommerce.dto.response.LoginResponse;
 import com.abel.ecommerce.dto.response.UserResponse;
 import com.abel.ecommerce.entity.User;
+import com.abel.ecommerce.exception.GlobalExceptionHandler;
 import com.abel.ecommerce.exception.IncorrectPasswordException;
 import com.abel.ecommerce.exception.UserAlreadyExistsException;
 import com.abel.ecommerce.exception.UserNotFoundException;
@@ -14,15 +17,16 @@ import com.abel.ecommerce.service.UserRoleCacheService;
 import com.abel.ecommerce.service.UserService;
 import com.abel.ecommerce.utils.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,8 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Controller tests for UserController
  */
-@EnableMethodSecurity
-@WebMvcTest(controllers = UserController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = RateLimitFilter.class))
+@WebMvcTest(controllers = UserController.class)
+@Import({SecurityConfig.class})
 @DisplayName("UserController Web Layer Tests")
 class UserControllerTest {
 
@@ -59,13 +63,38 @@ class UserControllerTest {
     @MockitoBean
     private TokenBlacklistService tokenBlacklistService;
 
+    @MockitoBean
+    private RateLimitFilter rateLimitFilter;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     private User testUser;
     private UserRegisterRequest testRegisterRequest;
     private UserLoginRequest testLoginRequest;
     private LoginResponse testLoginResponse;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        // Configure mock filters to pass through requests
+        doAnswer(invocation -> {
+            FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(
+                (ServletRequest) invocation.getArgument(0),
+                (ServletResponse) invocation.getArgument(1)
+            );
+            return null;
+        }).when(rateLimitFilter).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
+
+        doAnswer(invocation -> {
+            FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(
+                (ServletRequest) invocation.getArgument(0),
+                (ServletResponse) invocation.getArgument(1)
+            );
+            return null;
+        }).when(jwtAuthenticationFilter).doFilter(any(ServletRequest.class), any(ServletResponse.class), any(FilterChain.class));
+
         // Create test user
         testUser = new User();
         testUser.setId(1L);

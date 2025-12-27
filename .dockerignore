@@ -48,6 +48,13 @@ src/test/
 # Docker
 Dockerfile
 .dockerignore
+docker-compose.yml
+
+# OpenSpec
+openspec/
+
+# Claude
+.claude/
 
 # Other
 .env
