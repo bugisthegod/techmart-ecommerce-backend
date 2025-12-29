@@ -34,9 +34,21 @@ public class RateLimitConfig {
     @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
     @Bean(destroyMethod = "shutdown")
     public RedisClient lettuceRedisClient() {
-        return RedisClient.create("redis://" + redisHost + ":" + redisPort);
+        String protocol = "redis";
+        String userInfo = "";
+
+        if (redisPassword != null && !redisPassword.isBlank()) {
+            protocol = "rediss"; //
+            userInfo = ":" + redisPassword + "@";
+        }
+
+        String redisUri = String.format("%s://%s%s:%d", protocol, userInfo, redisHost, redisPort);
+        return RedisClient.create(redisUri);
     }
 
     @Bean(destroyMethod = "close")
