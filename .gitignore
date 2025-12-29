@@ -29,12 +29,6 @@ replay_pid*
 /src/test/java/com/abel/ecommerce/EcommerceApplicationTests.java
 /.idea/encodings.xml
 /HELP.md
-/.idea/jarRepositories.xml
-/.idea/misc.xml
-/.idea/PMDPlugin.xml
-/.idea/vcs.xml
-/.idea/compiler.xml
-/.idea/checkstyle-idea.xml
 /.gitattributes
 /.idea/.gitignore
 /src/main/resources/application-local.properties
@@ -44,11 +38,6 @@ replay_pid*
 **/logs
 /.github/agents/Senior Java Spring Boot Developer.agent.md
 /.github/agents/code-reviewer-pro.agent.md
-/.idea/copilot.data.migration.agent.xml
-/.idea/copilot.data.migration.ask.xml
-/.idea/copilot.data.migration.ask2agent.xml
-/.idea/copilot.data.migration.edit.xml
-/.idea/copilotDiffState.xml
 /ecommerce.iml
 /src/test/java/com/abel/ecommerce/TESTING_GUIDE.md
 /.idea/leetcode/statistics.xml
@@ -61,3 +50,7 @@ replay_pid*
 
 # Environment variables
 .env
+/.claude/
+/.idea/
+/openspec/
+/AGENTS.md
