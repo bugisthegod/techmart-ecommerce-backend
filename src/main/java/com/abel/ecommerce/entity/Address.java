@@ -38,7 +38,7 @@ public class Address {
     private String receiverName;
 
     @NotBlank(message = "Receiver phone cannot be blank")
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "Invalid phone number format")
+    @Pattern(regexp = "^(\\+353|0)[1-9]\\d{7,9}$", message = "Invalid phone number format")
     @Column(name = "receiver_phone", nullable = false, length = 20)
     private String receiverPhone;
 
