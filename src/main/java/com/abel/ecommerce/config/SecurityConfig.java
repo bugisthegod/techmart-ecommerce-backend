@@ -61,6 +61,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/users/register", "/api/users/login", "/api/users/test").permitAll()  // Allow registration and login
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()  // Allow swagger without authentication
                                 .requestMatchers("/api/webhooks/stripe").permitAll()  // Allow Stripe webhook endpoint
+                                .requestMatchers("/api/payments/session/**").permitAll()  // Allow public access to payment session lookup
                                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                                 .anyRequest().authenticated()  // All other requests require authentication
 //                                .anyRequest().permitAll()  // All other requests require authentication

@@ -53,6 +53,19 @@ public class PaymentController {
         return ResponseResult.ok(response);
     }
 
+    @Operation(summary = "Get payment by session ID", description = "Retrieve payment and order information using Stripe session ID")
+    @GetMapping("/session/{sessionId}")
+    public ResponseResult<PaymentResponse> getPaymentBySessionId(
+            @Parameter(description = "Stripe Session ID") @PathVariable String sessionId) {
+
+        Payment payment = paymentService.findByStripeSessionId(sessionId);
+
+        PaymentResponse response = new PaymentResponse();
+        BeanUtils.copyProperties(payment, response);
+
+        return ResponseResult.ok(response);
+    }
+
     @Operation(summary = "Process refund", description = "Process refund for a payment (Admin only)")
     @PostMapping("/{paymentId}/refund")
     @PreAuthorize("hasRole('ADMIN')")
