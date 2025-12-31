@@ -71,7 +71,7 @@ class AddressControllerTest {
         testAddress.setId(1L);
         testAddress.setUserId(testUserId);
         testAddress.setReceiverName("John Doe");
-        testAddress.setReceiverPhone("13812345678");
+        testAddress.setReceiverPhone("0851234567");
         testAddress.setProvince("California");
         testAddress.setCity("Los Angeles");
         testAddress.setDistrict("Downtown");
@@ -82,7 +82,7 @@ class AddressControllerTest {
         // Create test address request with valid phone
         testAddressRequest = new AddressRequest();
         testAddressRequest.setReceiverName("Jane Smith");
-        testAddressRequest.setReceiverPhone("13987654321");
+        testAddressRequest.setReceiverPhone("0857654321");
         testAddressRequest.setProvince("New York");
         testAddressRequest.setCity("New York");
         testAddressRequest.setDistrict("Manhattan");
@@ -90,10 +90,10 @@ class AddressControllerTest {
         testAddressRequest.setDetailAddress("456 Park Ave");
         testAddressRequest.setIsDefault(Address.NON_DEFAULT_ADDRESS);
 
-        // Create test address request with invalid phone (starts with 0, not 1)
+        // Create test address request with invalid phone (Chinese format, not Irish)
         invalidPhoneAddressRequest = new AddressRequest();
         invalidPhoneAddressRequest.setReceiverName("Invalid Phone User");
-        invalidPhoneAddressRequest.setReceiverPhone("0876543210");
+        invalidPhoneAddressRequest.setReceiverPhone("13812345678");
         invalidPhoneAddressRequest.setProvince("Shanghai");
         invalidPhoneAddressRequest.setCity("Pudong");
         invalidPhoneAddressRequest.setDistrict("Lujiazui");
@@ -132,7 +132,7 @@ class AddressControllerTest {
     @WithMockUser
     void createAddress_InvalidPhoneNumber_BadRequest() throws Exception {
         // Arrange
-        testAddressRequest.setReceiverPhone("0876543210"); // Invalid phone number
+        testAddressRequest.setReceiverPhone("13812345678"); // Invalid phone number (Chinese format)
 
         // Act & Assert
         mockMvc.perform(post("/api/addresses")

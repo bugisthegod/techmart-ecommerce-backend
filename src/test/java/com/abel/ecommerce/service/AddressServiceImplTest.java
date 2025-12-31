@@ -50,7 +50,7 @@ class AddressServiceImplTest {
         testAddress.setId(1L);
         testAddress.setUserId(testUserId);
         testAddress.setReceiverName("John Doe");
-        testAddress.setReceiverPhone("13812345678");
+        testAddress.setReceiverPhone("0851234567");
         testAddress.setProvince("California");
         testAddress.setCity("Los Angeles");
         testAddress.setDistrict("Downtown");
@@ -61,7 +61,7 @@ class AddressServiceImplTest {
         // Create test address request
         testAddressRequest = new AddressRequest();
         testAddressRequest.setReceiverName("Jane Smith");
-        testAddressRequest.setReceiverPhone("13987654321");
+        testAddressRequest.setReceiverPhone("0857654321");
         testAddressRequest.setProvince("New York");
         testAddressRequest.setCity("New York");
         testAddressRequest.setDistrict("Manhattan");

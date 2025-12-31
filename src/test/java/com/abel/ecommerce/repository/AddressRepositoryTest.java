@@ -44,7 +44,7 @@ class AddressRepositoryTest {
         address1 = new Address();
         address1.setUserId(testUserId1);
         address1.setReceiverName("John Doe");
-        address1.setReceiverPhone("13812345678");
+        address1.setReceiverPhone("0851234567");
         address1.setProvince("California");
         address1.setCity("Los Angeles");
         address1.setDistrict("Downtown");
@@ -55,7 +55,7 @@ class AddressRepositoryTest {
         address2 = new Address();
         address2.setUserId(testUserId1);
         address2.setReceiverName("Jane Doe");
-        address2.setReceiverPhone("13987654321");
+        address2.setReceiverPhone("0857654321");
         address2.setProvince("New York");
         address2.setCity("New York");
         address2.setDistrict("Manhattan");
@@ -67,7 +67,7 @@ class AddressRepositoryTest {
         address3 = new Address();
         address3.setUserId(testUserId2);
         address3.setReceiverName("Bob Smith");
-        address3.setReceiverPhone("13666666666");
+        address3.setReceiverPhone("0861234567");
         address3.setProvince("Texas");
         address3.setCity("Houston");
         address3.setDistrict("Midtown");
