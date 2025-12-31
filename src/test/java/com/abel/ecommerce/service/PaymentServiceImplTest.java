@@ -5,7 +5,6 @@ import com.abel.ecommerce.dto.response.CheckoutResponse;
 import com.abel.ecommerce.entity.Order;
 import com.abel.ecommerce.entity.Payment;
 import com.abel.ecommerce.entity.User;
-import com.abel.ecommerce.enums.PaymentStatus;
 import com.abel.ecommerce.exception.*;
 import com.abel.ecommerce.repository.OrderRepository;
 import com.abel.ecommerce.repository.PaymentRepository;
@@ -69,7 +68,7 @@ class PaymentServiceImplTest {
         testPayment.setStripePaymentIntentId("pi_test_123");
         testPayment.setAmount(new BigDecimal("99.99"));
         testPayment.setCurrency("USD");
-        testPayment.setStatus(PaymentStatus.PENDING);
+        testPayment.setStatus(Payment.STATUS_PENDING);
 
         // Setup test order
         testOrder = new Order();
@@ -155,11 +154,11 @@ class PaymentServiceImplTest {
         when(paymentRepository.save(any(Payment.class))).thenReturn(testPayment);
 
         // When
-        Payment result = paymentService.updatePaymentStatus(1L, PaymentStatus.SUCCEEDED, "pi_new_123");
+        Payment result = paymentService.updatePaymentStatus(1L, Payment.STATUS_SUCCEEDED, "pi_new_123");
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getStatus()).isEqualTo(PaymentStatus.SUCCEEDED);
+        assertThat(result.getStatus()).isEqualTo(Payment.STATUS_SUCCEEDED);
         assertThat(result.getStripePaymentIntentId()).isEqualTo("pi_new_123");
 
         verify(paymentRepository, times(1)).findById(1L);
@@ -177,10 +176,10 @@ class PaymentServiceImplTest {
         when(paymentRepository.save(any(Payment.class))).thenReturn(testPayment);
 
         // When
-        Payment result = paymentService.updatePaymentStatus(1L, PaymentStatus.FAILED, null);
+        Payment result = paymentService.updatePaymentStatus(1L, Payment.STATUS_FAILED, null);
 
         // Then
-        assertThat(result.getStatus()).isEqualTo(PaymentStatus.FAILED);
+        assertThat(result.getStatus()).isEqualTo(Payment.STATUS_FAILED);
         assertThat(result.getStripePaymentIntentId()).isEqualTo(originalIntentId); // Should remain unchanged
 
         verify(paymentRepository, times(1)).save(testPayment);
@@ -194,7 +193,7 @@ class PaymentServiceImplTest {
 
         // When & Then
         assertThatThrownBy(() ->
-                paymentService.updatePaymentStatus(999L, PaymentStatus.SUCCEEDED, "pi_test_123"))
+                paymentService.updatePaymentStatus(999L, Payment.STATUS_SUCCEEDED, "pi_test_123"))
                 .isInstanceOf(PaymentNotFoundException.class)
                 .hasMessageContaining("Payment not found with id 999");
 
@@ -212,7 +211,7 @@ class PaymentServiceImplTest {
              MockedStatic<Session> sessionMock = mockStatic(Session.class)) {
             // Given
             when(orderRepository.findById(testPayment.getOrderId())).thenReturn(Optional.of(testOrder));
-            when(paymentRepository.existsByOrderId(testPayment.getOrderId())).thenReturn(false);
+            when(paymentRepository.existsByOrderIdAndStatus(testPayment.getOrderId(), Payment.STATUS_SUCCEEDED)).thenReturn(false);
             when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
 
             // Mock Stripe Customer
@@ -239,7 +238,7 @@ class PaymentServiceImplTest {
             assertThat(checkoutSession.getCheckoutUrl()).isEqualTo("https://checkout.stripe.com/pay/cs_test_");
 
             verify(orderRepository, times(1)).findById(testPayment.getOrderId());
-            verify(paymentRepository, times(1)).existsByOrderId(testPayment.getOrderId());
+            verify(paymentRepository, times(1)).existsByOrderIdAndStatus(testPayment.getOrderId(), Payment.STATUS_SUCCEEDED);
             verify(userRepository, times(1)).save(any(User.class));
             verify(userRepository, times(1)).findById(testUser.getId());
             verify(paymentRepository, times(1)).save(any(Payment.class));
@@ -304,22 +303,22 @@ class PaymentServiceImplTest {
     }
 
     /*
-     * Should throw IllegalStateException when payment already exists for order
+     * Should throw IllegalStateException when payment already completed for order
      */
     @Test
-    @DisplayName("Should throw IllegalStateException when payment already exists")
+    @DisplayName("Should throw IllegalStateException when payment already completed")
     void testCreateCheckoutSession_PaymentAlreadyExists() {
         // Given
         when(orderRepository.findById(testPayment.getOrderId())).thenReturn(Optional.of(testOrder));
-        when(paymentRepository.existsByOrderId(testOrder.getId())).thenReturn(true);
+        when(paymentRepository.existsByOrderIdAndStatus(testOrder.getId(), Payment.STATUS_SUCCEEDED)).thenReturn(true);
 
         // When & Then
         assertThatThrownBy(() -> paymentService.createCheckoutSession(testOrder.getId(), testUser.getId()))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Payment already exists for this order");
+                .hasMessageContaining("Payment already completed for this order");
 
         verify(orderRepository, times(1)).findById(testPayment.getOrderId());
-        verify(paymentRepository, times(1)).existsByOrderId(testOrder.getId());
+        verify(paymentRepository, times(1)).existsByOrderIdAndStatus(testOrder.getId(), Payment.STATUS_SUCCEEDED);
     }
 
     /*

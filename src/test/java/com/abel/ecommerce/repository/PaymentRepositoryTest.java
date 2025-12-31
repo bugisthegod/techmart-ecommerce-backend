@@ -1,7 +1,6 @@
 package com.abel.ecommerce.repository;
 
 import com.abel.ecommerce.entity.Payment;
-import com.abel.ecommerce.enums.PaymentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,7 @@ class PaymentRepositoryTest {
         testPayment.setStripePaymentIntentId("pi_test_123456");
         testPayment.setAmount(new BigDecimal("99.99"));
         testPayment.setCurrency("USD");
-        testPayment.setStatus(PaymentStatus.PENDING);
+        testPayment.setStatus(Payment.STATUS_PENDING);
 
         // Persist test data
         entityManager.persist(testPayment);
@@ -95,7 +94,7 @@ class PaymentRepositoryTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get().getStripePaymentIntentId()).isEqualTo("pi_test_123456");
-        assertThat(result.get().getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(result.get().getStatus()).isEqualTo(Payment.STATUS_PENDING);
     }
 
     @Test
@@ -158,7 +157,7 @@ class PaymentRepositoryTest {
         completedPayment.setStripePaymentIntentId("pi_test_789012");
         completedPayment.setAmount(new BigDecimal("149.99"));
         completedPayment.setCurrency("USD");
-        completedPayment.setStatus(PaymentStatus.SUCCEEDED);
+        completedPayment.setStatus(Payment.STATUS_SUCCEEDED);
 
         entityManager.persist(completedPayment);
         entityManager.flush();
@@ -169,10 +168,10 @@ class PaymentRepositoryTest {
 
         // Then
         assertThat(pendingPayment).isPresent();
-        assertThat(pendingPayment.get().getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(pendingPayment.get().getStatus()).isEqualTo(Payment.STATUS_PENDING);
 
         assertThat(completed).isPresent();
-        assertThat(completed.get().getStatus()).isEqualTo(PaymentStatus.SUCCEEDED);
+        assertThat(completed.get().getStatus()).isEqualTo(Payment.STATUS_SUCCEEDED);
     }
 
     @Test
@@ -185,7 +184,7 @@ class PaymentRepositoryTest {
         paymentWithoutStripe.setStripePaymentIntentId(null);
         paymentWithoutStripe.setAmount(new BigDecimal("49.99"));
         paymentWithoutStripe.setCurrency("USD");
-        paymentWithoutStripe.setStatus(PaymentStatus.PENDING);
+        paymentWithoutStripe.setStatus(Payment.STATUS_PENDING);
 
         entityManager.persist(paymentWithoutStripe);
         entityManager.flush();

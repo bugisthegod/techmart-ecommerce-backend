@@ -1,7 +1,6 @@
 package com.abel.ecommerce.repository;
 
 import com.abel.ecommerce.entity.Payment;
-import com.abel.ecommerce.enums.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -29,6 +28,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Check if payment exists for order
      */
     boolean existsByOrderId(Long orderId);
+
+    /**
+     * Check if payment exists for order with specific status
+     */
+    boolean existsByOrderIdAndStatus(Long orderId, Integer status);
 
     /**
      * Check if payment exists with given session ID

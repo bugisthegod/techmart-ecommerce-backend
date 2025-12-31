@@ -1,6 +1,5 @@
 package com.abel.ecommerce.dto.response;
 
-import com.abel.ecommerce.enums.PaymentStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -15,7 +14,7 @@ public class PaymentResponse {
     private String stripePaymentIntentId;
     private BigDecimal amount;
     private String currency;
-    private PaymentStatus status;
+    private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

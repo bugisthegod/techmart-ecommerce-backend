@@ -5,7 +5,6 @@ import com.abel.ecommerce.dto.response.CheckoutResponse;
 import com.abel.ecommerce.entity.Order;
 import com.abel.ecommerce.entity.Payment;
 import com.abel.ecommerce.entity.User;
-import com.abel.ecommerce.enums.PaymentStatus;
 import com.abel.ecommerce.exception.OrderNotFoundException;
 import com.abel.ecommerce.exception.OrderStatusException;
 import com.abel.ecommerce.exception.PaymentNotFoundException;
@@ -54,9 +53,9 @@ public class PaymentServiceImpl implements PaymentService {
             throw new OrderStatusException("Order is not in pending payment status");
         }
 
-        // Check if payment already exists
-        if (paymentRepository.existsByOrderId(order.getId())) {
-            throw new IllegalStateException("Payment already exists for this order");
+        // Check if a successful payment already exists
+        if (paymentRepository.existsByOrderIdAndStatus(order.getId(), Payment.STATUS_SUCCEEDED)) {
+            throw new IllegalStateException("Payment already completed for this order");
         }
 
         try {
@@ -98,7 +97,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStripeSessionId(session.getId());
             payment.setAmount(order.getPayAmount());
             payment.setCurrency("USD");
-            payment.setStatus(PaymentStatus.PENDING);
+            payment.setStatus(Payment.STATUS_PENDING);
 
             paymentRepository.save(payment);
 
@@ -120,7 +119,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public Payment updatePaymentStatus(Long paymentId, PaymentStatus status, String stripePaymentIntentId) {
+    public Payment updatePaymentStatus(Long paymentId, Integer status, String stripePaymentIntentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException("Payment not found with id " + paymentId));
 

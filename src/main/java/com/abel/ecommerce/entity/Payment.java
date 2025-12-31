@@ -1,6 +1,5 @@
 package com.abel.ecommerce.entity;
 
-import com.abel.ecommerce.enums.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +18,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payment {
+
+    // Payment status constants
+    public static final Integer STATUS_PENDING = 0;    // Pending
+    public static final Integer STATUS_SUCCEEDED = 1;  // Succeeded
+    public static final Integer STATUS_FAILED = 2;     // Failed
+    public static final Integer STATUS_REFUNDED = 3;   // Refunded
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,9 +48,8 @@ public class Payment {
     private String currency = "USD";
 
     @NotNull(message = "Payment status cannot be null")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private PaymentStatus status = PaymentStatus.PENDING;
+    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    private Integer status = STATUS_PENDING;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

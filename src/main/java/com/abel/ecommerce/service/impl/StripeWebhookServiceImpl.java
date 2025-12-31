@@ -3,7 +3,6 @@ package com.abel.ecommerce.service.impl;
 import com.abel.ecommerce.config.StripeConfig;
 import com.abel.ecommerce.entity.Order;
 import com.abel.ecommerce.entity.Payment;
-import com.abel.ecommerce.enums.PaymentStatus;
 import com.abel.ecommerce.repository.OrderRepository;
 import com.abel.ecommerce.repository.PaymentRepository;
 import com.abel.ecommerce.service.OrderService;
@@ -66,12 +65,16 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
     @Override
     @Transactional
     public void handleCheckoutSessionCompleted(Event event) {
-        Session session = (Session) event.getDataObjectDeserializer()
-                .getObject()
-                .orElse(null);
+        Session session;
+        try {
+            session = (Session) event.getData().getObject();
+        } catch (Exception e) {
+            log.error("Failed to deserialize checkout session from event", e);
+            return;
+        }
 
         if (session == null) {
-            log.error("Failed to deserialize checkout session from event");
+            log.error("Checkout session is null in event");
             return;
         }
 
@@ -90,13 +93,13 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         Payment payment = paymentOpt.get();
 
         // Idempotency check
-        if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+        if (payment.getStatus().equals(Payment.STATUS_SUCCEEDED)) {
             log.info("Payment already processed for session: {}", sessionId);
             return;
         }
 
         // Update payment status
-        payment.setStatus(PaymentStatus.SUCCEEDED);
+        payment.setStatus(Payment.STATUS_SUCCEEDED);
         payment.setStripePaymentIntentId(paymentIntentId);
         paymentRepository.save(payment);
 
@@ -116,12 +119,16 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
     @Override
     @Transactional
     public void handlePaymentIntentFailed(Event event) {
-        com.stripe.model.PaymentIntent paymentIntent = (com.stripe.model.PaymentIntent) event.getDataObjectDeserializer()
-                .getObject()
-                .orElse(null);
+        com.stripe.model.PaymentIntent paymentIntent;
+        try {
+            paymentIntent = (com.stripe.model.PaymentIntent) event.getData().getObject();
+        } catch (Exception e) {
+            log.error("Failed to deserialize payment intent from event", e);
+            return;
+        }
 
         if (paymentIntent == null) {
-            log.error("Failed to deserialize payment intent from event");
+            log.error("Payment intent is null in event");
             return;
         }
 
@@ -138,7 +145,7 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         Payment payment = paymentOpt.get();
 
         // Update payment status to FAILED
-        payment.setStatus(PaymentStatus.FAILED);
+        payment.setStatus(Payment.STATUS_FAILED);
         paymentRepository.save(payment);
 
         log.info("Payment {} marked as FAILED", payment.getId());
@@ -147,12 +154,16 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
     @Override
     @Transactional
     public void handleChargeRefunded(Event event) {
-        com.stripe.model.Charge charge = (com.stripe.model.Charge) event.getDataObjectDeserializer()
-                .getObject()
-                .orElse(null);
+        com.stripe.model.Charge charge;
+        try {
+            charge = (com.stripe.model.Charge) event.getData().getObject();
+        } catch (Exception e) {
+            log.error("Failed to deserialize charge from event", e);
+            return;
+        }
 
         if (charge == null) {
-            log.error("Failed to deserialize charge from event");
+            log.error("Charge is null in event");
             return;
         }
 
@@ -169,8 +180,8 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         Payment payment = paymentOpt.get();
 
         // Update payment status to REFUNDED (if not already)
-        if (payment.getStatus() != PaymentStatus.REFUNDED) {
-            payment.setStatus(PaymentStatus.REFUNDED);
+        if (!payment.getStatus().equals(Payment.STATUS_REFUNDED)) {
+            payment.setStatus(Payment.STATUS_REFUNDED);
             paymentRepository.save(payment);
             log.info("Payment {} marked as REFUNDED via webhook", payment.getId());
         }

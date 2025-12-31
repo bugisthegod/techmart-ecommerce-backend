@@ -3,7 +3,6 @@ package com.abel.ecommerce.service.impl;
 import com.abel.ecommerce.dto.response.RefundResponse;
 import com.abel.ecommerce.entity.Order;
 import com.abel.ecommerce.entity.Payment;
-import com.abel.ecommerce.enums.PaymentStatus;
 import com.abel.ecommerce.exception.OrderNotFoundException;
 import com.abel.ecommerce.exception.PaymentNotFoundException;
 import com.abel.ecommerce.repository.OrderRepository;
@@ -33,7 +32,7 @@ public class RefundServiceImpl implements RefundService {
                 .orElseThrow(() -> new PaymentNotFoundException("Payment not found with id " + paymentId));
 
         // Validate payment status
-        if (payment.getStatus() != PaymentStatus.SUCCEEDED) {
+        if (!payment.getStatus().equals(Payment.STATUS_SUCCEEDED)) {
             throw new IllegalStateException("Only succeeded payments can be refunded. Current status: " + payment.getStatus());
         }
 
@@ -54,7 +53,7 @@ public class RefundServiceImpl implements RefundService {
             Refund refund = Refund.create(paramsBuilder.build());
 
             // Update payment status
-            payment.setStatus(PaymentStatus.REFUNDED);
+            payment.setStatus(Payment.STATUS_REFUNDED);
             paymentRepository.save(payment);
 
             // Update order status to CANCELLED

@@ -2,7 +2,6 @@ package com.abel.ecommerce.service;
 
 import com.abel.ecommerce.dto.response.CheckoutResponse;
 import com.abel.ecommerce.entity.Payment;
-import com.abel.ecommerce.enums.PaymentStatus;
 
 public interface PaymentService {
 
@@ -28,7 +27,7 @@ public interface PaymentService {
      * @param stripePaymentIntentId Stripe Payment Intent ID (optional)
      * @return Updated payment entity
      */
-    Payment updatePaymentStatus(Long paymentId, PaymentStatus status, String stripePaymentIntentId);
+    Payment updatePaymentStatus(Long paymentId, Integer status, String stripePaymentIntentId);
 
     /**
      * Get or create Stripe customer for user
