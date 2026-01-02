@@ -46,7 +46,7 @@ ENV SPRING_PROFILES_ACTIVE=prod
 
 # JVM options for container environment
 # Using G1GC for better performance and container-aware memory settings
-ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+ENV JAVA_OPTS="-Xms256m -Xmx700m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC"
 
 # Health check
 # Increased start-period to 90s for slow startup (StockWarmer @PostConstruct loads Redis)
